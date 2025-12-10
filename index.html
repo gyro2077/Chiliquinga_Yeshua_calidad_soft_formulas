@@ -14,6 +14,8 @@
   <!-- MathJax -->
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <!-- jsPDF para generación de PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
@@ -113,13 +115,159 @@
         transform: translate3d(4px, 0, 0);
       }
     }
+
+    /* Tooltip Styles - Mejorado para evitar overflow */
+    .tooltip {
+      position: relative;
+      display: inline-block;
+      cursor: help;
+    }
+
+    .tooltip .tooltiptext {
+      visibility: hidden;
+      width: 280px;
+      max-width: 90vw;
+      background-color: #1e293b;
+      color: #fff;
+      text-align: left;
+      border-radius: 8px;
+      padding: 12px;
+      position: fixed;
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 12px;
+      line-height: 1.5;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      pointer-events: none;
+    }
+
+    .tooltip .tooltiptext::after {
+      content: "";
+      position: absolute;
+      border-width: 6px;
+      border-style: solid;
+    }
+    
+    /* Tooltip arriba (por defecto) */
+    .tooltip .tooltiptext[data-position="top"]::after {
+      top: 100%;
+      left: 50%;
+      margin-left: -6px;
+      border-color: #1e293b transparent transparent transparent;
+    }
+    
+    /* Tooltip abajo */
+    .tooltip .tooltiptext[data-position="bottom"]::after {
+      bottom: 100%;
+      left: 50%;
+      margin-left: -6px;
+      border-color: transparent transparent #1e293b transparent;
+    }
+    
+    /* Tooltip izquierda */
+    .tooltip .tooltiptext[data-position="left"]::after {
+      left: 100%;
+      top: 50%;
+      margin-top: -6px;
+      border-color: transparent transparent transparent #1e293b;
+    }
+    
+    /* Tooltip derecha */
+    .tooltip .tooltiptext[data-position="right"]::after {
+      right: 100%;
+      top: 50%;
+      margin-top: -6px;
+      border-color: transparent #1e293b transparent transparent;
+    }
+
+    .tooltip:hover .tooltiptext {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* Step indicator */
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .step-number {
+      background: #6366f1;
+      color: white;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    /* Info boxes */
+    .info-box {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .info-box-blue {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .info-box-green {
+      background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+
+    .info-box-yellow {
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+
+    /* Pulse animation for help icons */
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+
+    .help-icon {
+      animation: pulse 2s infinite;
+    }
+
+    /* Scroll bar in event log */
+    #event-log::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    #event-log::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.3);
+    }
+
+    #event-log::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.5);
+      border-radius: 2px;
+    }
+
+    #event-log::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.7);
+    }
   </style>
 </head>
 
 <body class="flex h-screen overflow-hidden text-slate-800">
 
   <!-- Sidebar -->
-  <aside class="w-72 bg-slate-900 text-slate-300 flex flex-col shadow-2xl z-20 transition-all">
+  <aside class="w-72 bg-slate-900 text-slate-100 flex flex-col shadow-2xl z-20 transition-all">
     <!-- Profile / Header Section -->
     <div class="p-6 border-b border-slate-700 bg-slate-800">
       <div class="flex items-center gap-3 mb-4">
@@ -133,8 +281,19 @@
         </div>
       </div>
       <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
-        <p class="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-1">Materia</p>
-        <p class="text-xs text-slate-200 font-medium">27888 Aseguramiento de la Calidad de Software</p>
+        <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold mb-1">Materia</p>
+        <p class="text-xs text-slate-100 font-medium">27888 Aseguramiento de la Calidad de Software</p>
+      </div>
+      
+      <!-- Nombre del Proyecto -->
+      <div class="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 p-4 rounded-lg border border-indigo-500/30 mt-4">
+        <label class="block text-xs font-bold text-slate-300 mb-2">
+          <i class="fas fa-folder-open mr-2"></i>Nombre del Proyecto
+        </label>
+        <input type="text" id="projectName" 
+          class="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-sm text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          placeholder="Ej: Sistema de Gestión v2.0"
+          value="Mi Proyecto de Calidad">
       </div>
       <a href="https://chiliquinga-yeshua-calidad-soft-formulas.onrender.com" target="_blank" 
          class="mt-3 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 p-2.5 rounded-lg transition-all group">
@@ -151,40 +310,76 @@
         <span class="font-medium">Dashboard General</span>
       </a>
 
-      <div class="px-6 py-4 mt-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Calidad de Proceso</div>
+      <div class="px-6 py-4 mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+        <i class="fas fa-cogs"></i>
+        Calidad de Proceso
+      </div>
 
       <a href="#" onclick="showSection('iso29110')" id="nav-iso29110"
-        class="sidebar-link flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
-        <i class="fas fa-tasks w-6 group-hover:text-blue-400 transition-colors"></i>
-        <span>ISO 29110 (ICP)</span>
+        class="sidebar-link flex items-center justify-between px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-tasks group-hover:text-blue-400 transition-colors"></i>
+          <div>
+            <span class="block font-medium">ISO 29110 (ICP)</span>
+            <span class="text-[10px] text-slate-400 group-hover:text-slate-300">Cumplimiento de actividades</span>
+          </div>
+        </div>
       </a>
       <a href="#" onclick="showSection('iso9001')" id="nav-iso9001"
-        class="sidebar-link flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
-        <i class="fas fa-file-contract w-6 group-hover:text-yellow-400 transition-colors"></i>
-        <span>ISO 9001 (NC)</span>
+        class="sidebar-link flex items-center justify-between px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-file-contract group-hover:text-yellow-400 transition-colors"></i>
+          <div>
+            <span class="block font-medium">ISO 9001 (NC)</span>
+            <span class="text-[10px] text-slate-400 group-hover:text-slate-300">No conformidades</span>
+          </div>
+        </div>
       </a>
 
-      <div class="px-6 py-4 mt-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Calidad de Producto</div>
+      <div class="px-6 py-4 mt-2 text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+        <i class="fas fa-box"></i>
+        Calidad de Producto
+      </div>
 
       <a href="#" onclick="showSection('reliability')" id="nav-reliability"
-        class="sidebar-link flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
-        <i class="fas fa-server w-6 group-hover:text-red-400 transition-colors"></i>
-        <span>Fiabilidad (MTBF)</span>
+        class="sidebar-link flex items-center justify-between px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-server group-hover:text-red-400 transition-colors"></i>
+          <div>
+            <span class="block font-medium">Fiabilidad (MTBF)</span>
+            <span class="text-[10px] text-slate-400 group-hover:text-slate-300">Tiempo entre fallos</span>
+          </div>
+        </div>
       </a>
       <a href="#" onclick="showSection('performance')" id="nav-performance"
-        class="sidebar-link flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
-        <i class="fas fa-tachometer-alt w-6 group-hover:text-green-400 transition-colors"></i>
-        <span>Rendimiento (TPR)</span>
+        class="sidebar-link flex items-center justify-between px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-tachometer-alt group-hover:text-green-400 transition-colors"></i>
+          <div>
+            <span class="block font-medium">Rendimiento (TPR)</span>
+            <span class="text-[10px] text-slate-400 group-hover:text-slate-300">Velocidad de respuesta</span>
+          </div>
+        </div>
       </a>
       <a href="#" onclick="showSection('structure')" id="nav-structure"
-        class="sidebar-link flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
-        <i class="fas fa-code-branch w-6 group-hover:text-purple-400 transition-colors"></i>
-        <span>Estructural (CISQ)</span>
+        class="sidebar-link flex items-center justify-between px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-code-branch group-hover:text-purple-400 transition-colors"></i>
+          <div>
+            <span class="block font-medium">Estructural (CISQ)</span>
+            <span class="text-[10px] text-slate-400 group-hover:text-slate-300">Complejidad & Seguridad</span>
+          </div>
+        </div>
       </a>
       <a href="#" onclick="showSection('usability')" id="nav-usability"
-        class="sidebar-link flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
-        <i class="fas fa-users w-6 group-hover:text-teal-400 transition-colors"></i>
-        <span>Usabilidad (UX)</span>
+        class="sidebar-link flex items-center justify-between px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
+        <div class="flex items-center gap-3">
+          <i class="fas fa-users group-hover:text-teal-400 transition-colors"></i>
+          <div>
+            <span class="block font-medium">Usabilidad (UX)</span>
+            <span class="text-[10px] text-slate-400 group-hover:text-slate-300">Experiencia de usuario</span>
+          </div>
+        </div>
       </a>
     </nav>
 
@@ -199,14 +394,87 @@
     <div class="absolute top-0 left-0 w-full h-64 bg-gradient-to-r from-indigo-600 to-purple-700 -z-10"></div>
 
     <!-- Header Title (Dynamic) -->
-    <div class="mb-8 text-white flex justify-between items-end">
-      <div>
-        <h1 class="text-3xl font-bold mb-1" id="page-title">Panel de Control</h1>
-        <p class="text-indigo-100 opacity-90 text-sm">Monitorización de métricas de calidad de software</p>
+    <div class="mb-8">
+      <div class="flex justify-between items-start mb-3">
+        <div class="flex-1">
+          <h1 class="text-4xl font-bold mb-2 text-slate-900" id="page-title">Panel de Control</h1>
+          <p class="text-slate-800 text-base drop-shadow-lg" id="page-subtitle">Sistema de gestión y monitorización de métricas de calidad de software</p>
+        </div>
+        <!-- Indicador de Progreso -->
+        <div class="bg-white/20 backdrop-blur-md rounded-xl p-4 min-w-[180px] border border-white/30">
+          <div class="flex items-center gap-2 mb-2">
+            <i class="fas fa-tasks text-slate-900"></i>
+            <span class="text-sm font-bold text-slate-900">Progreso</span>
+          </div>
+          <div class="text-3xl font-bold mb-1 text-slate-900"><span id="progressCount">0</span>/7</div>
+          <div class="w-full bg-slate-300 rounded-full h-2 mb-2">
+            <div id="progressBar" class="bg-slate-900 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+          </div>
+          <p class="text-xs opacity-90 text-slate-800">métricas calculadas</p>
+        </div>
       </div>
-      <div class="text-right hidden md:block">
-        <div class="text-xs bg-white/20 backdrop-blur-md px-3 py-1 rounded-full inline-block border border-white/30">
-          <i class="fas fa-circle text-green-400 text-[8px] mr-2"></i>Sistema Activo
+      
+      <!-- Guía de Uso Completa -->
+      <div class="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl p-5">
+        <div class="flex items-start gap-4 mb-4">
+          <div class="bg-blue-500 rounded-full p-3 text-white">
+            <i class="fas fa-map-marked-alt text-2xl"></i>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-xl font-bold text-slate-900 mb-3">
+              <i class="fas fa-compass mr-2"></i>Guía de Uso del Sistema
+            </h3>
+            <p class="text-slate-800 text-sm mb-4 opacity-90">Sigue estos 4 pasos para obtener un reporte completo de calidad</p>
+          </div>
+        </div>
+        
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+            <h4 class="font-bold text-slate-900 mb-2 flex items-center gap-2">
+              <span class="bg-indigo-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">1</span>
+              Preparación
+            </h4>
+            <ul class="text-xs text-slate-800 space-y-1">
+              <li>✓ Nombre del proyecto (sidebar)</li>
+              <li>✓ Revisar esta guía</li>
+            </ul>
+          </div>
+          
+          <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+            <h4 class="font-bold text-slate-900 mb-2 flex items-center gap-2">
+              <span class="bg-purple-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">2</span>
+              Cálculos
+            </h4>
+            <ul class="text-xs text-slate-800 space-y-1">
+              <li>→ Usa menú lateral</li>
+              <li>→ Calcula cada métrica</li>
+              <li>→ Observa progreso (X/7)</li>
+            </ul>
+          </div>
+          
+          <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+            <h4 class="font-bold text-slate-900 mb-2 flex items-center gap-2">
+              <span class="bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">3</span>
+              Revisión
+            </h4>
+            <ul class="text-xs text-slate-800 space-y-1">
+              <li>👁 Regresa al Dashboard</li>
+              <li>👁 Revisa tarjetas</li>
+              <li>👁 Analiza gráfico radar</li>
+            </ul>
+          </div>
+          
+          <div class="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
+            <h4 class="font-bold text-slate-900 mb-2 flex items-center gap-2">
+              <span class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm">4</span>
+              Exportación
+            </h4>
+            <ul class="text-xs text-slate-800 space-y-1">
+              <li>📄 Genera reporte PDF</li>
+              <li>⬇ Descarga documento</li>
+              <li>📤 Comparte con equipo</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -217,72 +485,207 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <!-- Card 1 -->
         <div
-          class="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-blue-500 hover:-translate-y-1 transition-transform duration-300">
+          class="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-blue-500 hover:-translate-y-1 transition-transform duration-300 cursor-pointer group"
+          onclick="showSection('iso29110')">
           <div class="flex justify-between items-start mb-4">
             <div>
-              <p class="text-xs font-bold text-slate-400 uppercase">Cumplimiento ISO 29110</p>
-              <h3 class="text-2xl font-bold text-slate-700 mt-1" id="dash-icp">--%</h3>
+              <p class="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
+                Cumplimiento ISO 29110
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-blue-300 text-[10px]"></i>
+                  <span class="tooltiptext" style="width: 200px;">
+                    Mide qué % de actividades planeadas fueron completadas. Indica disciplina del equipo.
+                  </span>
+                </div>
+              </p>
+              <h3 class="text-3xl font-bold text-slate-700 mt-1" id="dash-icp">--%</h3>
             </div>
-            <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
               <i class="fas fa-check-circle text-xl"></i>
             </div>
           </div>
           <div class="text-xs text-slate-500">
             <span class="text-blue-600 font-semibold">Proceso:</span> Gestión de Proyectos
           </div>
+          <div class="mt-2 text-xs text-blue-500 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+            <i class="fas fa-arrow-right mr-1"></i>Click para calcular
+          </div>
         </div>
 
         <!-- Card 2 -->
         <div
-          class="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-red-500 hover:-translate-y-1 transition-transform duration-300">
+          class="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-red-500 hover:-translate-y-1 transition-transform duration-300 cursor-pointer group"
+          onclick="showSection('reliability')">
           <div class="flex justify-between items-start mb-4">
             <div>
-              <p class="text-xs font-bold text-slate-400 uppercase">Fiabilidad (MTBF)</p>
-              <h3 class="text-2xl font-bold text-slate-700 mt-1" id="dash-mtbf">-- h</h3>
+              <p class="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
+                Fiabilidad (MTBF)
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-red-300 text-[10px]"></i>
+                  <span class="tooltiptext" style="width: 200px;">
+                    Tiempo medio entre fallos. Indica estabilidad y confiabilidad del sistema.
+                  </span>
+                </div>
+              </p>
+              <h3 class="text-3xl font-bold text-slate-700 mt-1" id="dash-mtbf">-- h</h3>
             </div>
-            <div class="w-10 h-10 rounded-lg bg-red-50 text-red-500 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-lg bg-red-50 text-red-500 flex items-center justify-center group-hover:scale-110 transition-transform">
               <i class="fas fa-heartbeat text-xl"></i>
             </div>
           </div>
           <div class="text-xs text-slate-500">
             <span class="text-red-600 font-semibold">Crítico:</span> Disponibilidad del sistema
           </div>
+          <div class="mt-2 text-xs text-red-500 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+            <i class="fas fa-arrow-right mr-1"></i>Click para calcular
+          </div>
         </div>
 
         <!-- Card 3 -->
         <div
-          class="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-green-500 hover:-translate-y-1 transition-transform duration-300">
+          class="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-green-500 hover:-translate-y-1 transition-transform duration-300 cursor-pointer group"
+          onclick="showSection('performance')">
           <div class="flex justify-between items-start mb-4">
             <div>
-              <p class="text-xs font-bold text-slate-400 uppercase">Rendimiento (TPR)</p>
-              <h3 class="text-2xl font-bold text-slate-700 mt-1" id="dash-tpr">-- ms</h3>
+              <p class="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
+                Rendimiento (TPR)
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-green-300 text-[10px]"></i>
+                  <span class="tooltiptext" style="width: 200px;">
+                    Tiempo promedio de respuesta. Mide la velocidad de tu aplicación.
+                  </span>
+                </div>
+              </p>
+              <h3 class="text-3xl font-bold text-slate-700 mt-1" id="dash-tpr">-- ms</h3>
             </div>
-            <div class="w-10 h-10 rounded-lg bg-green-50 text-green-500 flex items-center justify-center">
+            <div class="w-10 h-10 rounded-lg bg-green-50 text-green-500 flex items-center justify-center group-hover:scale-110 transition-transform">
               <i class="fas fa-stopwatch text-xl"></i>
             </div>
           </div>
           <div class="text-xs text-slate-500">
-            <span class="text-green-600 font-semibold">KPI:</span>
-            < 200ms </div>
+            <span class="text-green-600 font-semibold">KPI:</span> < 200ms
           </div>
-
-          <!-- Card 4 -->
-          <div
-            class="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-purple-500 hover:-translate-y-1 transition-transform duration-300">
-            <div class="flex justify-between items-start mb-4">
-              <div>
-                <p class="text-xs font-bold text-slate-400 uppercase">Complejidad (CC)</p>
-                <h3 class="text-2xl font-bold text-slate-700 mt-1" id="dash-cc">--</h3>
-              </div>
-              <div class="w-10 h-10 rounded-lg bg-purple-50 text-purple-500 flex items-center justify-center">
-                <i class="fas fa-code text-xl"></i>
-              </div>
-            </div>
-            <div class="text-xs text-slate-500">
-              <span class="text-purple-600 font-semibold">McCabe:</span> Mantenibilidad
-            </div>
+          <div class="mt-2 text-xs text-green-500 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+            <i class="fas fa-arrow-right mr-1"></i>Click para calcular
           </div>
         </div>
+
+        <!-- Card 4 -->
+        <div
+          class="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-purple-500 hover:-translate-y-1 transition-transform duration-300 cursor-pointer group"
+          onclick="showSection('structure')">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <p class="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
+                Complejidad (CC)
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-purple-300 text-[10px]"></i>
+                  <span class="tooltiptext" style="width: 200px;">
+                    Complejidad ciclomática de McCabe. Indica qué tan difícil es mantener el código.
+                  </span>
+                </div>
+              </p>
+              <h3 class="text-3xl font-bold text-slate-700 mt-1" id="dash-cc">--</h3>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-purple-50 text-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <i class="fas fa-code text-xl"></i>
+            </div>
+          </div>
+          <div class="text-xs text-slate-500">
+            <span class="text-purple-600 font-semibold">McCabe:</span> Mantenibilidad
+          </div>
+          <div class="mt-2 text-xs text-purple-500 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+            <i class="fas fa-arrow-right mr-1"></i>Click para calcular
+          </div>
+        </div>
+        
+        <!-- Card 5 - ISO 9001 NC -->
+        <div
+          class="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-yellow-500 hover:-translate-y-1 transition-transform duration-300 cursor-pointer group"
+          onclick="showSection('iso9001')">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <p class="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
+                No Conformidades (NC)
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-yellow-300 text-[10px]"></i>
+                  <span class="tooltiptext" style="width: 200px;">
+                    Índice de no conformidades. Mide problemas en auditorías ISO 9001.
+                  </span>
+                </div>
+              </p>
+              <h3 class="text-3xl font-bold text-slate-700 mt-1" id="dash-nc">--</h3>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-yellow-50 text-yellow-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <i class="fas fa-clipboard-check text-xl"></i>
+            </div>
+          </div>
+          <div class="text-xs text-slate-500">
+            <span class="text-yellow-600 font-semibold">ISO 9001:</span> Gestión de Calidad
+          </div>
+          <div class="mt-2 text-xs text-yellow-500 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+            <i class="fas fa-arrow-right mr-1"></i>Click para calcular
+          </div>
+        </div>
+        
+        <!-- Card 6 - IVC -->
+        <div
+          class="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-orange-500 hover:-translate-y-1 transition-transform duration-300 cursor-pointer group"
+          onclick="showSection('structure')">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <p class="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
+                Vulnerabilidades (IVC)
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-orange-300 text-[10px]"></i>
+                  <span class="tooltiptext" style="width: 200px;">
+                    Índice de vulnerabilidades críticas en el código.
+                  </span>
+                </div>
+              </p>
+              <h3 class="text-3xl font-bold text-slate-700 mt-1" id="dash-ivc">--%</h3>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <i class="fas fa-shield-alt text-xl"></i>
+            </div>
+          </div>
+          <div class="text-xs text-slate-500">
+            <span class="text-orange-600 font-semibold">Seguridad:</span> Vulnerabilidades
+          </div>
+          <div class="mt-2 text-xs text-orange-500 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+            <i class="fas fa-arrow-right mr-1"></i>Click para calcular
+          </div>
+        </div>
+        
+        <!-- Card 7 - UX -->
+        <div
+          class="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-teal-500 hover:-translate-y-1 transition-transform duration-300 cursor-pointer group"
+          onclick="showSection('usability')">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <p class="text-xs font-bold text-slate-400 uppercase flex items-center gap-1">
+                Usabilidad (UX)
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-teal-300 text-[10px]"></i>
+                  <span class="tooltiptext" style="width: 200px;">
+                    Tasa de éxito en tareas de usuario. Mide facilidad de uso.
+                  </span>
+                </div>
+              </p>
+              <h3 class="text-3xl font-bold text-slate-700 mt-1" id="dash-ux">--%</h3>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-teal-50 text-teal-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+              <i class="fas fa-smile text-xl"></i>
+            </div>
+          </div>
+          <div class="text-xs text-slate-500">
+            <span class="text-teal-600 font-semibold">ISO 9241:</span> Experiencia Usuario
+          </div>
+          <div class="mt-2 text-xs text-teal-500 font-semibold opacity-0 group-hover:opacity-100 transition-opacity">
+            <i class="fas fa-arrow-right mr-1"></i>Click para calcular
+          </div>
+        </div>
+      </div>
 
         <!-- Charts & Actions -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -298,33 +701,48 @@
           <div
             class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-lg p-6 text-white flex flex-col justify-between">
             <div>
-              <h3 class="font-bold text-lg mb-2">Simulación de Eventos</h3>
-              <p class="text-slate-400 text-sm mb-6">Herramientas rápidas para registrar incidencias en tiempo real.</p>
+              <h3 class="font-bold text-lg mb-2 text-white">Registro de Eventos</h3>
+              <p class="text-slate-300 text-sm mb-4">Historial de actividades y métricas calculadas.</p>
 
-              <div class="space-y-3">
+              <!-- Event Log -->
+              <div id="event-log" class="bg-slate-900/50 rounded-lg p-3 mb-4 max-h-48 overflow-y-auto">
+                <p class="text-xs text-slate-400 text-center py-4">No hay eventos registrados aún</p>
+              </div>
+
+              <div class="space-y-2">
                 <button
-                  class="w-full bg-red-500/20 hover:bg-red-500/40 border border-red-500/50 text-red-200 p-3 rounded-xl flex items-center transition-all group"
-                  onclick="alert('Incidente registrado: Exception NullPointer en módulo Login.')">
+                  class="w-full bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white p-3 rounded-lg flex items-center transition-all group text-sm shadow-lg hover:shadow-xl"
+                  onclick="generatePDFReport()">
                   <div
-                    class="bg-red-500 text-white w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
-                    <i class="fas fa-bug"></i>
+                    class="bg-white/20 text-white w-8 h-8 rounded-lg flex items-center justify-center mr-2 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-file-pdf text-sm"></i>
                   </div>
-                  <span class="text-sm font-semibold">Registrar Bug Crítico</span>
+                  <span class="font-bold">Generar Reporte PDF</span>
+                </button>
+                
+                <button
+                  class="w-full bg-green-500/20 hover:bg-green-500/40 border border-green-500/50 text-green-100 p-2 rounded-lg flex items-center transition-all group text-xs"
+                  onclick="exportToCSV()">
+                  <div
+                    class="bg-green-500 text-white w-6 h-6 rounded-lg flex items-center justify-center mr-2 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-file-csv text-[10px]"></i>
+                  </div>
+                  <span class="font-semibold text-white">CSV (alternativo)</span>
                 </button>
 
                 <button
-                  class="w-full bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/50 text-blue-200 p-3 rounded-xl flex items-center transition-all group"
-                  onclick="alert('Auditoría iniciada: Revisando documentación ISO 29110.')">
+                  class="w-full bg-purple-500/20 hover:bg-purple-500/40 border border-purple-500/50 text-purple-100 p-2.5 rounded-lg flex items-center transition-all group text-sm"
+                  onclick="clearEventLog()">
                   <div
-                    class="bg-blue-500 text-white w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
-                    <i class="fas fa-clipboard-list"></i>
+                    class="bg-purple-500 text-white w-7 h-7 rounded-lg flex items-center justify-center mr-2 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-trash-alt text-xs"></i>
                   </div>
-                  <span class="text-sm font-semibold">Iniciar Auditoría</span>
+                  <span class="font-semibold text-white">Limpiar Historial</span>
                 </button>
               </div>
             </div>
-            <div class="mt-6 pt-6 border-t border-slate-700 text-center">
-              <p class="text-xs text-slate-500">Sistema v2.0 - Developed by Yeshua C.</p>
+            <div class="mt-4 pt-4 border-t border-slate-700 text-center">
+              <p class="text-xs text-slate-400">Sistema v2.0 - Developed by Yeshua C.</p>
             </div>
           </div>
         </div>
@@ -335,11 +753,32 @@
     <!-- ISO 29110 -->
     <section id="iso29110" class="content-section hidden space-y-6">
       <div class="bg-white rounded-2xl shadow-md p-8 border border-slate-100">
-        <div class="flex items-center mb-6">
-          <div class="bg-blue-100 p-3 rounded-full text-blue-600 mr-4"><i class="fas fa-tasks text-xl"></i></div>
-          <div>
-            <h2 class="text-xl font-bold text-slate-800">Cálculo de ICP (ISO 29110)</h2>
-            <p class="text-slate-500 text-sm">Índice de Cumplimiento de Procesos para Microempresas (VSE)</p>
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center">
+            <div class="bg-blue-100 p-3 rounded-full text-blue-600 mr-4"><i class="fas fa-tasks text-xl"></i></div>
+            <div>
+              <h2 class="text-xl font-bold text-slate-800">Cálculo de ICP (ISO 29110)</h2>
+              <p class="text-slate-500 text-sm">Índice de Cumplimiento de Procesos para Microempresas (VSE)</p>
+            </div>
+          </div>
+          <div class="tooltip">
+            <i class="fas fa-question-circle text-2xl text-blue-400 help-icon"></i>
+            <span class="tooltiptext">
+              <strong>¿Qué es ISO 29110?</strong><br>
+              Es un estándar internacional diseñado para pequeñas empresas que desarrollan software. Ayuda a establecer procesos organizados y medibles.
+            </span>
+          </div>
+        </div>
+
+        <!-- Info Box Explicativa -->
+        <div class="info-box info-box-blue">
+          <div class="flex items-start gap-3">
+            <i class="fas fa-lightbulb text-2xl mt-1"></i>
+            <div>
+              <strong class="block mb-1">¿Qué mide este indicador?</strong>
+              El ICP te dice qué tan bien estás cumpliendo con las actividades que planificaste para tu proyecto. 
+              Un resultado alto significa que tu equipo es disciplinado y cumple lo prometido.
+            </div>
           </div>
         </div>
 
@@ -351,34 +790,90 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div class="space-y-5">
-            <div class="input-group">
-              <label class="block text-sm font-semibold text-slate-600 mb-1">Actividades Planificadas</label>
-              <input type="number" id="icp-planned" min="1"
-                class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none transition-all placeholder-slate-400 text-slate-700"
-                placeholder="Ej: 15">
-              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            <!-- Paso 1 -->
+            <div class="step-indicator">
+              <div class="step-number">1</div>
+              <span class="text-sm font-semibold text-slate-700">Ingresa las actividades planificadas</span>
             </div>
             <div class="input-group">
-              <label class="block text-sm font-semibold text-slate-600 mb-1">Actividades Realizadas</label>
-              <input type="number" id="icp-realized" min="0"
-                class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none transition-all placeholder-slate-400 text-slate-700"
-                placeholder="Ej: 13">
+              <label class="block text-sm font-semibold text-slate-600 mb-1 flex items-center gap-2">
+                Actividades Planificadas
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-blue-400 text-xs"></i>
+                  <span class="tooltiptext">
+                    Número total de tareas que planeaste hacer en el proyecto. Ejemplo: si tu plan tiene 15 reuniones, entregas y revisiones, ingresa "15".
+                  </span>
+                </div>
+              </label>
+              <input type="number" id="icp-planned" min="1"
+                class="w-full p-3 bg-slate-50 border-2 border-slate-300 rounded-lg outline-none transition-all placeholder-slate-400 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                placeholder="Ej: 15">
+              <p class="text-xs text-slate-400 mt-1"><i class="fas fa-arrow-right mr-1"></i>Ejemplo: 15 actividades en tu cronograma</p>
               <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+
+            <!-- Paso 2 -->
+            <div class="step-indicator">
+              <div class="step-number">2</div>
+              <span class="text-sm font-semibold text-slate-700">Ingresa las actividades completadas</span>
+            </div>
+            <div class="input-group">
+              <label class="block text-sm font-semibold text-slate-600 mb-1 flex items-center gap-2">
+                Actividades Realizadas
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-blue-400 text-xs"></i>
+                  <span class="tooltiptext">
+                    Número de tareas que efectivamente completaste. Si completaste 13 de las 15 tareas planeadas, ingresa "13".
+                  </span>
+                </div>
+              </label>
+              <input type="number" id="icp-realized" min="0"
+                class="w-full p-3 bg-slate-50 border-2 border-slate-300 rounded-lg outline-none transition-all placeholder-slate-400 text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                placeholder="Ej: 13">
+              <p class="text-xs text-slate-400 mt-1"><i class="fas fa-arrow-right mr-1"></i>Ejemplo: 13 actividades completadas exitosamente</p>
+              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+
+            <!-- Paso 3 -->
+            <div class="step-indicator">
+              <div class="step-number">3</div>
+              <span class="text-sm font-semibold text-slate-700">Obtén tu resultado</span>
             </div>
             <button onclick="calcICP()"
-              class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all">
+              class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2">
+              <i class="fas fa-calculator"></i>
               Calcular Cumplimiento
             </button>
           </div>
 
           <!-- Result Panel -->
           <div id="icp-result"
-            class="hidden bg-slate-50 rounded-xl p-6 border border-slate-200 flex flex-col justify-center items-center text-center relative overflow-hidden">
+            class="hidden bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl p-8 border-2 border-blue-200 flex flex-col justify-center items-center text-center relative overflow-hidden shadow-lg">
             <div class="absolute top-0 left-0 w-2 h-full bg-gray-300" id="icp-bar"></div>
-            <span class="text-slate-500 text-sm uppercase tracking-wider font-semibold">Resultado Final</span>
-            <span class="text-5xl font-extrabold text-slate-800 my-3" id="icp-value">0%</span>
-            <span id="icp-badge" class="px-4 py-1 rounded-full text-sm font-bold bg-gray-200 text-gray-700">--</span>
-            <p id="icp-feedback" class="text-sm mt-4 text-slate-600 max-w-xs"></p>
+            <i class="fas fa-chart-line text-4xl text-blue-500 mb-3"></i>
+            <span class="text-slate-500 text-sm uppercase tracking-wider font-semibold">Tu Índice de Cumplimiento</span>
+            <span class="text-6xl font-extrabold text-slate-800 my-4" id="icp-value">0%</span>
+            <span id="icp-badge" class="px-6 py-2 rounded-full text-sm font-bold bg-gray-200 text-gray-700 shadow-md">--</span>
+            <p id="icp-feedback" class="text-sm mt-5 text-slate-700 max-w-xs leading-relaxed"></p>
+            
+            <!-- Interpretación -->
+            <div class="mt-6 pt-6 border-t border-slate-300 w-full">
+              <p class="text-xs font-bold text-slate-600 uppercase mb-2">📊 Cómo interpretar:</p>
+              <div class="text-xs text-left space-y-1 text-slate-600">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                  <span><strong>85-100%:</strong> Excelente disciplina de proyecto</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                  <span><strong>70-84%:</strong> Cumplimiento aceptable, hay margen de mejora</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+                  <span><strong>< 70%:</strong> Proceso indisciplinado, requiere atención</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -387,12 +882,32 @@
     <!-- ISO 9001 -->
     <section id="iso9001" class="content-section hidden space-y-6">
       <div class="bg-white rounded-2xl shadow-md p-8 border border-slate-100">
-        <div class="flex items-center mb-6">
-          <div class="bg-yellow-100 p-3 rounded-full text-yellow-600 mr-4"><i class="fas fa-file-contract text-xl"></i>
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center">
+            <div class="bg-yellow-100 p-3 rounded-full text-yellow-600 mr-4"><i class="fas fa-file-contract text-xl"></i></div>
+            <div>
+              <h2 class="text-xl font-bold text-slate-800">No Conformidades (ISO 9001)</h2>
+              <p class="text-slate-500 text-sm">Evaluación de salud del sistema de gestión</p>
+            </div>
           </div>
-          <div>
-            <h2 class="text-xl font-bold text-slate-800">No Conformidades (ISO 9001)</h2>
-            <p class="text-slate-500 text-sm">Evaluación de salud del sistema de gestión</p>
+          <div class="tooltip">
+            <i class="fas fa-question-circle text-2xl text-yellow-400 help-icon"></i>
+            <span class="tooltiptext">
+              <strong>¿Qué es ISO 9001?</strong><br>
+              Es un estándar de gestión de calidad. Las "no conformidades" son problemas encontrados durante auditorías que indican que algo no se está haciendo según lo especificado.
+            </span>
+          </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box info-box-yellow">
+          <div class="flex items-start gap-3">
+            <i class="fas fa-exclamation-triangle text-2xl mt-1"></i>
+            <div>
+              <strong class="block mb-1">¿Qué significa este indicador?</strong>
+              Mide cuántos problemas o incumplimientos se encontraron en relación con los procesos revisados. 
+              Un número bajo es mejor: significa que tu sistema de gestión está funcionando correctamente.
+            </div>
           </div>
         </div>
 
@@ -404,32 +919,84 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div class="space-y-5">
-            <div class="input-group">
-              <label class="block text-sm font-semibold text-slate-600 mb-1">Total Procesos Auditados</label>
-              <input type="number" id="nc-total" min="1"
-                class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none transition-all"
-                placeholder="Ej: 4">
-              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            <div class="step-indicator">
+              <div class="step-number">1</div>
+              <span class="text-sm font-semibold text-slate-700">Define cuántos procesos revisaste</span>
             </div>
             <div class="input-group">
-              <label class="block text-sm font-semibold text-slate-600 mb-1">Hallazgos (No Conformidades)</label>
-              <input type="number" id="nc-found" min="0"
-                class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none transition-all"
-                placeholder="Ej: 1">
+              <label class="block text-sm font-semibold text-slate-600 mb-1 flex items-center gap-2">
+                Total Procesos Auditados
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-yellow-400 text-xs"></i>
+                  <span class="tooltiptext">
+                    Número de procesos o áreas que fueron revisadas en la auditoría. Ejemplo: si auditaste "Compras", "Ventas", "Producción" y "RRHH", serían 4 procesos.
+                  </span>
+                </div>
+              </label>
+              <input type="number" id="nc-total" min="1"
+                class="w-full p-3 bg-slate-50 border-2 border-slate-300 rounded-lg outline-none transition-all focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200"
+                placeholder="Ej: 4">
+              <p class="text-xs text-slate-400 mt-1"><i class="fas fa-arrow-right mr-1"></i>Cantidad de áreas o procesos revisados</p>
               <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+
+            <div class="step-indicator">
+              <div class="step-number">2</div>
+              <span class="text-sm font-semibold text-slate-700">Ingresa los problemas encontrados</span>
+            </div>
+            <div class="input-group">
+              <label class="block text-sm font-semibold text-slate-600 mb-1 flex items-center gap-2">
+                Hallazgos (No Conformidades)
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-yellow-400 text-xs"></i>
+                  <span class="tooltiptext">
+                    Número de problemas o incumplimientos detectados. Ejemplo: si encontraste 1 procedimiento sin documentar, ingresa "1".
+                  </span>
+                </div>
+              </label>
+              <input type="number" id="nc-found" min="0"
+                class="w-full p-3 bg-slate-50 border-2 border-slate-300 rounded-lg outline-none transition-all focus:border-yellow-500 focus:ring-2 focus:ring-yellow-200"
+                placeholder="Ej: 1">
+              <p class="text-xs text-slate-400 mt-1"><i class="fas fa-arrow-right mr-1"></i>Número de incumplimientos detectados</p>
+              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+
+            <div class="step-indicator">
+              <div class="step-number">3</div>
+              <span class="text-sm font-semibold text-slate-700">Evalúa el nivel de riesgo</span>
             </div>
             <button onclick="calcNC()"
-              class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all">
+              class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+              <i class="fas fa-search"></i>
               Calcular Riesgo
             </button>
           </div>
 
           <div id="nc-result"
-            class="hidden bg-slate-50 rounded-xl p-6 border border-slate-200 flex flex-col justify-center items-center text-center relative">
+            class="hidden bg-gradient-to-br from-slate-50 to-yellow-50 rounded-xl p-8 border-2 border-yellow-200 flex flex-col justify-center items-center text-center relative shadow-lg">
             <div class="absolute top-0 left-0 w-2 h-full bg-gray-300" id="nc-bar"></div>
-            <span class="text-slate-500 text-sm uppercase font-semibold">Índice NC</span>
-            <span class="text-5xl font-extrabold text-slate-800 my-3" id="nc-value">0</span>
-            <span id="nc-badge" class="px-4 py-1 rounded-full text-sm font-bold bg-gray-200 text-gray-700">--</span>
+            <i class="fas fa-clipboard-check text-4xl text-yellow-500 mb-3"></i>
+            <span class="text-slate-500 text-sm uppercase font-semibold">Índice de No Conformidades</span>
+            <span class="text-6xl font-extrabold text-slate-800 my-4" id="nc-value">0</span>
+            <span id="nc-badge" class="px-6 py-2 rounded-full text-sm font-bold bg-gray-200 text-gray-700 shadow-md">--</span>
+            
+            <div class="mt-6 pt-6 border-t border-slate-300 w-full">
+              <p class="text-xs font-bold text-slate-600 uppercase mb-2">📊 Interpretación:</p>
+              <div class="text-xs text-left space-y-1 text-slate-600">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                  <span><strong>0:</strong> Sistema perfecto, sin hallazgos</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                  <span><strong>0.01-0.25:</strong> Pocos problemas, gestionables</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+                  <span><strong>> 0.25:</strong> Sistema fallido, necesita revisión urgente</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -438,11 +1005,32 @@
     <!-- MTBF -->
     <section id="reliability" class="content-section hidden space-y-6">
       <div class="bg-white rounded-2xl shadow-md p-8 border border-slate-100">
-        <div class="flex items-center mb-6">
-          <div class="bg-red-100 p-3 rounded-full text-red-600 mr-4"><i class="fas fa-server text-xl"></i></div>
-          <div>
-            <h2 class="text-xl font-bold text-slate-800">Fiabilidad: MTBF (ISO 25010)</h2>
-            <p class="text-slate-500 text-sm">Tiempo Medio Entre Fallos</p>
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center">
+            <div class="bg-red-100 p-3 rounded-full text-red-600 mr-4"><i class="fas fa-server text-xl"></i></div>
+            <div>
+              <h2 class="text-xl font-bold text-slate-800">Fiabilidad: MTBF (ISO 25010)</h2>
+              <p class="text-slate-500 text-sm">Tiempo Medio Entre Fallos</p>
+            </div>
+          </div>
+          <div class="tooltip">
+            <i class="fas fa-question-circle text-2xl text-red-400 help-icon"></i>
+            <span class="tooltiptext">
+              <strong>¿Qué es MTBF?</strong><br>
+              Mean Time Between Failures (Tiempo Medio Entre Fallos). Mide qué tan confiable es tu sistema calculando cuánto tiempo pasa en promedio entre cada fallo.
+            </span>
+          </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+          <div class="flex items-start gap-3">
+            <i class="fas fa-heartbeat text-2xl mt-1"></i>
+            <div>
+              <strong class="block mb-1">¿Por qué es importante?</strong>
+              El MTBF te indica la estabilidad de tu sistema. Un valor alto significa que tu aplicación funciona durante mucho tiempo sin fallar. 
+              Ejemplo: si tu app funciona 168 horas (1 semana) y tuvo 8 fallos, el MTBF es 21 horas.
+            </div>
           </div>
         </div>
 
@@ -454,34 +1042,84 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div class="space-y-5">
-            <div class="input-group">
-              <label class="block text-sm font-semibold text-slate-600 mb-1">Tiempo de Operación (Horas)</label>
-              <input type="number" id="mtbf-time" min="1"
-                class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none transition-all"
-                placeholder="Ej: 168 (1 semana)">
-              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            <div class="step-indicator">
+              <div class="step-number">1</div>
+              <span class="text-sm font-semibold text-slate-700">Registra el tiempo total que estuvo activo</span>
             </div>
             <div class="input-group">
-              <label class="block text-sm font-semibold text-slate-600 mb-1">Número de Fallos</label>
-              <input type="number" id="mtbf-fails" min="0"
-                class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none transition-all"
-                placeholder="Ej: 8">
+              <label class="block text-sm font-semibold text-slate-600 mb-1 flex items-center gap-2">
+                Tiempo de Operación (Horas)
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-red-400 text-xs"></i>
+                  <span class="tooltiptext">
+                    Total de horas que tu sistema estuvo funcionando. Ejemplo: si monitoreaste durante 1 semana completa, son 168 horas (7 días × 24 horas).
+                  </span>
+                </div>
+              </label>
+              <input type="number" id="mtbf-time" min="1"
+                class="w-full p-3 bg-slate-50 border-2 border-slate-300 rounded-lg outline-none transition-all focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                placeholder="Ej: 168 (1 semana)">
+              <p class="text-xs text-slate-400 mt-1"><i class="fas fa-clock mr-1"></i>1 día = 24h, 1 semana = 168h, 1 mes ≈ 720h</p>
               <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+
+            <div class="step-indicator">
+              <div class="step-number">2</div>
+              <span class="text-sm font-semibold text-slate-700">Cuenta cuántas veces falló</span>
+            </div>
+            <div class="input-group">
+              <label class="block text-sm font-semibold text-slate-600 mb-1 flex items-center gap-2">
+                Número de Fallos
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-red-400 text-xs"></i>
+                  <span class="tooltiptext">
+                    Cantidad de veces que tu sistema tuvo errores, caídas o comportamientos inesperados durante el período medido. Incluye crashes, excepciones críticas, etc.
+                  </span>
+                </div>
+              </label>
+              <input type="number" id="mtbf-fails" min="0"
+                class="w-full p-3 bg-slate-50 border-2 border-slate-300 rounded-lg outline-none transition-all focus:border-red-500 focus:ring-2 focus:ring-red-200"
+                placeholder="Ej: 8">
+              <p class="text-xs text-slate-400 mt-1"><i class="fas fa-bug mr-1"></i>Cuenta crashes, errores críticos y caídas del sistema</p>
+              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+
+            <div class="step-indicator">
+              <div class="step-number">3</div>
+              <span class="text-sm font-semibold text-slate-700">Evalúa la estabilidad</span>
             </div>
             <button onclick="calcMTBF()"
-              class="w-full bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all">
+              class="w-full bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+              <i class="fas fa-heartbeat"></i>
               Calcular Estabilidad
             </button>
           </div>
 
           <div id="mtbf-result"
-            class="hidden bg-slate-50 rounded-xl p-6 border border-slate-200 flex flex-col justify-center items-center text-center relative">
+            class="hidden bg-gradient-to-br from-slate-50 to-red-50 rounded-xl p-8 border-2 border-red-200 flex flex-col justify-center items-center text-center relative shadow-lg">
             <div class="absolute top-0 left-0 w-2 h-full bg-gray-300" id="mtbf-bar"></div>
-            <span class="text-slate-500 text-sm uppercase font-semibold">Frecuencia de Fallo</span>
-            <span class="text-5xl font-extrabold text-slate-800 my-3" id="mtbf-value">0h</span>
-            <span id="mtbf-badge" class="px-4 py-1 rounded-full text-sm font-bold bg-gray-200 text-gray-700">--</span>
-            <p class="text-xs text-slate-400 mt-4"><i class="fas fa-info-circle mr-1"></i> Basado en logs del servidor
-            </p>
+            <i class="fas fa-server text-4xl text-red-500 mb-3"></i>
+            <span class="text-slate-500 text-sm uppercase font-semibold">Tiempo Promedio Entre Fallos</span>
+            <span class="text-6xl font-extrabold text-slate-800 my-4" id="mtbf-value">0h</span>
+            <span id="mtbf-badge" class="px-6 py-2 rounded-full text-sm font-bold bg-gray-200 text-gray-700 shadow-md">--</span>
+            
+            <div class="mt-6 pt-6 border-t border-slate-300 w-full">
+              <p class="text-xs font-bold text-slate-600 uppercase mb-2">📊 Rangos de referencia:</p>
+              <div class="text-xs text-left space-y-1 text-slate-600">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                  <span><strong>> 72h:</strong> Sistema muy estable y confiable</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                  <span><strong>24-72h:</strong> Estabilidad moderada, monitorear</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+                  <span><strong>< 24h:</strong> Sistema inestable, requiere mejoras urgentes</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -490,12 +1128,32 @@
     <!-- TPR -->
     <section id="performance" class="content-section hidden space-y-6">
       <div class="bg-white rounded-2xl shadow-md p-8 border border-slate-100">
-        <div class="flex items-center mb-6">
-          <div class="bg-green-100 p-3 rounded-full text-green-600 mr-4"><i class="fas fa-tachometer-alt text-xl"></i>
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center">
+            <div class="bg-green-100 p-3 rounded-full text-green-600 mr-4"><i class="fas fa-tachometer-alt text-xl"></i></div>
+            <div>
+              <h2 class="text-xl font-bold text-slate-800">Rendimiento: TPR</h2>
+              <p class="text-slate-500 text-sm">Tiempo Promedio de Respuesta</p>
+            </div>
           </div>
-          <div>
-            <h2 class="text-xl font-bold text-slate-800">Rendimiento: TPR</h2>
-            <p class="text-slate-500 text-sm">Tiempo Promedio de Respuesta</p>
+          <div class="tooltip">
+            <i class="fas fa-question-circle text-2xl text-green-400 help-icon"></i>
+            <span class="tooltiptext">
+              <strong>¿Qué es TPR?</strong><br>
+              Tiempo Promedio de Respuesta. Mide qué tan rápido responde tu aplicación a las solicitudes de los usuarios. Es crucial para la experiencia del usuario.
+            </span>
+          </div>
+        </div>
+
+        <!-- Info Box -->
+        <div class="info-box info-box-green">
+          <div class="flex items-start gap-3">
+            <i class="fas fa-rocket text-2xl mt-1"></i>
+            <div>
+              <strong class="block mb-1">¿Por qué importa la velocidad?</strong>
+              Los usuarios abandonan sitios lentos. Un TPR bajo (rápido) mejora la experiencia del usuario y la satisfacción. 
+              Estándar: < 200ms es excelente, < 1000ms (1 segundo) es aceptable, > 1s es lento.
+            </div>
           </div>
         </div>
 
@@ -507,39 +1165,83 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div class="space-y-5">
-            <div class="input-group">
-              <label class="block text-sm font-semibold text-slate-600 mb-1">Tiempo Acumulado (ms)</label>
-              <input type="number" id="tpr-total-time" min="1"
-                class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none transition-all"
-                placeholder="Ej: 5400">
-              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            <div class="step-indicator">
+              <div class="step-number">1</div>
+              <span class="text-sm font-semibold text-slate-700">Suma todos los tiempos de respuesta</span>
             </div>
             <div class="input-group">
-              <label class="block text-sm font-semibold text-slate-600 mb-1">Total Solicitudes</label>
-              <input type="number" id="tpr-requests" min="1"
-                class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none transition-all"
-                placeholder="Ej: 300">
+              <label class="block text-sm font-semibold text-slate-600 mb-1 flex items-center gap-2">
+                Tiempo Acumulado (ms)
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-green-400 text-xs"></i>
+                  <span class="tooltiptext">
+                    Suma de todos los tiempos de respuesta medidos. Ejemplo: si mediste 300 solicitudes y la suma total es 5400ms, ingresa "5400". (1 segundo = 1000 milisegundos)
+                  </span>
+                </div>
+              </label>
+              <input type="number" id="tpr-total-time" min="1"
+                class="w-full p-3 bg-slate-50 border-2 border-slate-300 rounded-lg outline-none transition-all focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                placeholder="Ej: 5400">
+              <p class="text-xs text-slate-400 mt-1"><i class="fas fa-stopwatch mr-1"></i>Recuerda: 1000ms = 1 segundo</p>
               <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+
+            <div class="step-indicator">
+              <div class="step-number">2</div>
+              <span class="text-sm font-semibold text-slate-700">Indica cuántas solicitudes procesaste</span>
+            </div>
+            <div class="input-group">
+              <label class="block text-sm font-semibold text-slate-600 mb-1 flex items-center gap-2">
+                Total Solicitudes
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-green-400 text-xs"></i>
+                  <span class="tooltiptext">
+                    Número total de peticiones o requests que procesó tu sistema durante la medición. Pueden ser llamadas API, páginas cargadas, consultas a base de datos, etc.
+                  </span>
+                </div>
+              </label>
+              <input type="number" id="tpr-requests" min="1"
+                class="w-full p-3 bg-slate-50 border-2 border-slate-300 rounded-lg outline-none transition-all focus:border-green-500 focus:ring-2 focus:ring-green-200"
+                placeholder="Ej: 300">
+              <p class="text-xs text-slate-400 mt-1"><i class="fas fa-exchange-alt mr-1"></i>Cantidad total de requests procesados</p>
+              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+
+            <div class="step-indicator">
+              <div class="step-number">3</div>
+              <span class="text-sm font-semibold text-slate-700">Calcula el tiempo promedio</span>
             </div>
             <button onclick="calcTPR()"
-              class="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all">
+              class="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+              <i class="fas fa-tachometer-alt"></i>
               Calcular Latencia
             </button>
           </div>
 
           <div id="tpr-result"
-            class="hidden bg-slate-50 rounded-xl p-6 border border-slate-200 flex flex-col justify-center items-center text-center relative">
+            class="hidden bg-gradient-to-br from-slate-50 to-green-50 rounded-xl p-8 border-2 border-green-200 flex flex-col justify-center items-center text-center relative shadow-lg">
             <div class="absolute top-0 left-0 w-2 h-full bg-gray-300" id="tpr-bar"></div>
-            <span class="text-slate-500 text-sm uppercase font-semibold">Latencia Media</span>
-            <span class="text-5xl font-extrabold text-slate-800 my-3" id="tpr-value">0ms</span>
-            <span id="tpr-badge" class="px-4 py-1 rounded-full text-sm font-bold bg-gray-200 text-gray-700">--</span>
-            <div class="mt-4 flex gap-2 text-[10px] text-slate-500 uppercase">
-              <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-1"></span>
-                <200ms< /span>
-                  <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>
-                    <1s< /span>
-                      <span class="flex items-center"><span
-                          class="w-2 h-2 rounded-full bg-red-500 mr-1"></span>>1s</span>
+            <i class="fas fa-bolt text-4xl text-green-500 mb-3"></i>
+            <span class="text-slate-500 text-sm uppercase font-semibold">Tiempo Promedio de Respuesta</span>
+            <span class="text-6xl font-extrabold text-slate-800 my-4" id="tpr-value">0ms</span>
+            <span id="tpr-badge" class="px-6 py-2 rounded-full text-sm font-bold bg-gray-200 text-gray-700 shadow-md">--</span>
+            
+            <div class="mt-6 pt-6 border-t border-slate-300 w-full">
+              <p class="text-xs font-bold text-slate-600 uppercase mb-2">⚡ Estándares de velocidad:</p>
+              <div class="text-xs text-left space-y-1 text-slate-600">
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                  <span><strong>< 200ms:</strong> Excelente - Usuario no percibe demora</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                  <span><strong>200-1000ms:</strong> Aceptable - Pequeña espera perceptible</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+                  <span><strong>> 1000ms:</strong> Lento - Frustración del usuario</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -551,59 +1253,170 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- McCabe -->
         <div class="bg-white rounded-2xl shadow-md p-8 border border-slate-100">
-          <h3 class="text-lg font-bold text-slate-700 mb-4 border-b pb-2">Complejidad Ciclomática</h3>
+          <div class="flex items-center justify-between mb-4 border-b pb-3">
+            <div class="flex items-center gap-3">
+              <div class="bg-purple-100 p-2 rounded-lg"><i class="fas fa-code-branch text-purple-600"></i></div>
+              <h3 class="text-lg font-bold text-slate-700">Complejidad Ciclomática</h3>
+            </div>
+            <div class="tooltip">
+              <i class="fas fa-question-circle text-purple-400 help-icon"></i>
+              <span class="tooltiptext">
+                <strong>¿Qué es la Complejidad Ciclomática?</strong><br>
+                Métrica de McCabe que mide cuántos caminos independientes hay en tu código. Más caminos = más complejo = más difícil de probar y mantener.
+              </span>
+            </div>
+          </div>
+
+          <div class="bg-purple-50 border-l-4 border-purple-500 p-3 mb-4 rounded-r-lg">
+            <p class="text-xs text-purple-900 mb-2"><strong>📚 ¿Qué necesitas?</strong></p>
+            <ul class="text-xs text-purple-800 space-y-1 ml-4">
+              <li>• <strong>E (Aristas):</strong> Líneas de conexión en el grafo</li>
+              <li>• <strong>N (Nodos):</strong> Puntos de decisión en el código</li>
+              <li>• <strong>P (Componentes):</strong> Normalmente 1</li>
+            </ul>
+          </div>
+          
           <div class="mb-4 text-xs bg-slate-100 p-2 rounded font-mono text-slate-600">CC = E - N + 2P</div>
 
           <div class="grid grid-cols-3 gap-3 mb-4">
             <div class="input-group">
-              <label class="text-xs font-bold text-slate-500">Aristas (E)</label>
-              <input type="number" id="cc-edges" class="w-full p-2 border rounded-md" placeholder="25">
+              <label class="text-xs font-bold text-slate-500 flex items-center gap-1">
+                Aristas (E)
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-purple-400 text-[10px]"></i>
+                  <span class="tooltiptext" style="width: 200px; margin-left: -100px;">
+                    Líneas que conectan nodos en el grafo de control de flujo. Representa las transiciones entre bloques de código.
+                  </span>
+                </div>
+              </label>
+              <input type="number" id="cc-edges" class="w-full p-2 border-2 border-slate-300 rounded-md focus:border-purple-500" placeholder="25">
             </div>
             <div class="input-group">
-              <label class="text-xs font-bold text-slate-500">Nodos (N)</label>
-              <input type="number" id="cc-nodes" class="w-full p-2 border rounded-md" placeholder="20">
+              <label class="text-xs font-bold text-slate-500 flex items-center gap-1">
+                Nodos (N)
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-purple-400 text-[10px]"></i>
+                  <span class="tooltiptext" style="width: 200px; margin-left: -100px;">
+                    Puntos de decisión en el código (if, while, for, switch, etc.). Cada bloque ejecutable cuenta como un nodo.
+                  </span>
+                </div>
+              </label>
+              <input type="number" id="cc-nodes" class="w-full p-2 border-2 border-slate-300 rounded-md focus:border-purple-500" placeholder="20">
             </div>
             <div class="input-group">
-              <label class="text-xs font-bold text-slate-500">Comp (P)</label>
-              <input type="number" id="cc-comp" class="w-full p-2 border rounded-md" value="1">
+              <label class="text-xs font-bold text-slate-500 flex items-center gap-1">
+                Comp (P)
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-purple-400 text-[10px]"></i>
+                  <span class="tooltiptext" style="width: 200px; margin-left: -100px;">
+                    Componentes conectados. Para una sola función/método, siempre es 1. Déjalo en 1 por defecto.
+                  </span>
+                </div>
+              </label>
+              <input type="number" id="cc-comp" class="w-full p-2 border-2 border-slate-300 rounded-md focus:border-purple-500" value="1">
             </div>
           </div>
           <p class="hidden text-red-500 text-xs mb-3 error-msg" id="cc-error"></p>
 
           <button onclick="calcCC()"
-            class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded-lg transition-colors">Calcular</button>
+            class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
+            <i class="fas fa-calculator"></i>
+            Calcular Complejidad
+          </button>
 
           <div id="cc-result" class="hidden mt-4 pt-4 border-t text-center">
-            <span class="text-3xl font-bold text-slate-700 block" id="cc-value">0</span>
-            <span id="cc-badge" class="inline-block mt-1 px-3 py-1 bg-gray-100 rounded text-xs font-bold">--</span>
+            <i class="fas fa-project-diagram text-2xl text-purple-500 mb-2"></i>
+            <span class="text-4xl font-bold text-slate-700 block" id="cc-value">0</span>
+            <span id="cc-badge" class="inline-block mt-2 px-4 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-bold">--</span>
+            <div class="mt-3 text-[10px] text-slate-500 space-y-1">
+              <div class="flex items-center justify-center gap-2">
+                <span class="w-2 h-2 bg-green-500 rounded-full"></span><span>1-10: Simple</span>
+              </div>
+              <div class="flex items-center justify-center gap-2">
+                <span class="w-2 h-2 bg-yellow-500 rounded-full"></span><span>11-20: Moderado</span>
+              </div>
+              <div class="flex items-center justify-center gap-2">
+                <span class="w-2 h-2 bg-red-500 rounded-full"></span><span>>20: Complejo</span>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- IVC -->
         <div class="bg-white rounded-2xl shadow-md p-8 border border-slate-100">
-          <h3 class="text-lg font-bold text-slate-700 mb-4 border-b pb-2">Índice Vulnerabilidad (IVC)</h3>
-          <div class="mb-4 text-xs bg-slate-100 p-2 rounded font-mono text-slate-600">IVC = (Críticas / Totales) %</div>
+          <div class="flex items-center justify-between mb-4 border-b pb-3">
+            <div class="flex items-center gap-3">
+              <div class="bg-red-100 p-2 rounded-lg"><i class="fas fa-shield-alt text-red-600"></i></div>
+              <h3 class="text-lg font-bold text-slate-700">Índice Vulnerabilidad (IVC)</h3>
+            </div>
+            <div class="tooltip">
+              <i class="fas fa-question-circle text-red-400 help-icon"></i>
+              <span class="tooltiptext">
+                <strong>¿Qué es IVC?</strong><br>
+                Índice de Vulnerabilidad Crítica. Mide qué porcentaje de las vulnerabilidades encontradas son de alta gravedad y necesitan corrección urgente.
+              </span>
+            </div>
+          </div>
+
+          <div class="bg-red-50 border-l-4 border-red-500 p-3 mb-4 rounded-r-lg">
+            <p class="text-xs text-red-900 mb-2"><strong>🔒 ¿Por qué importa?</strong></p>
+            <p class="text-xs text-red-800">Las vulnerabilidades críticas (SQLi, XSS, RCE) pueden comprometer completamente tu sistema. Este índice te ayuda a priorizar las correcciones.</p>
+          </div>
+
+          <div class="mb-4 text-xs bg-slate-100 p-2 rounded font-mono text-slate-600">IVC = (Críticas / Totales) × 100%</div>
 
           <div class="space-y-3 mb-4">
             <div class="input-group">
-              <label class="text-xs font-bold text-slate-500">Total Vulnerabilidades</label>
-              <input type="number" id="ivc-total" class="w-full p-2 border rounded-md" placeholder="14">
+              <label class="text-xs font-bold text-slate-500 flex items-center gap-1">
+                Total Vulnerabilidades
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-red-400 text-[10px]"></i>
+                  <span class="tooltiptext" style="width: 220px; margin-left: -110px;">
+                    Todas las vulnerabilidades detectadas por herramientas de seguridad (OWASP ZAP, SonarQube, etc.), incluyendo bajas, medias y críticas.
+                  </span>
+                </div>
+              </label>
+              <input type="number" id="ivc-total" class="w-full p-2 border-2 border-slate-300 rounded-md focus:border-red-500" placeholder="14">
+              <p class="text-[10px] text-slate-400 mt-1">Ejemplo: 14 issues encontrados en total</p>
               <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
             </div>
             <div class="input-group">
-              <label class="text-xs font-bold text-slate-500">Críticas (SQLi, XSS)</label>
-              <input type="number" id="ivc-critical" class="w-full p-2 border rounded-md" placeholder="2">
+              <label class="text-xs font-bold text-slate-500 flex items-center gap-1">
+                Críticas (SQLi, XSS, RCE)
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-red-400 text-[10px]"></i>
+                  <span class="tooltiptext" style="width: 220px; margin-left: -110px;">
+                    Solo las vulnerabilidades de alta gravedad: SQL Injection, Cross-Site Scripting, Remote Code Execution, etc. Son las más peligrosas.
+                  </span>
+                </div>
+              </label>
+              <input type="number" id="ivc-critical" class="w-full p-2 border-2 border-slate-300 rounded-md focus:border-red-500" placeholder="2">
+              <p class="text-[10px] text-slate-400 mt-1">Ejemplo: 2 vulnerabilidades de severidad alta/crítica</p>
               <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
             </div>
           </div>
 
           <button onclick="calcIVC()"
-            class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg transition-colors">Calcular
-            Seguridad</button>
+            class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
+            <i class="fas fa-bug"></i>
+            Calcular Seguridad
+          </button>
 
           <div id="ivc-result" class="hidden mt-4 pt-4 border-t text-center">
-            <span class="text-3xl font-bold text-slate-700 block" id="ivc-value">0%</span>
-            <span id="ivc-badge" class="inline-block mt-1 px-3 py-1 bg-gray-100 rounded text-xs font-bold">--</span>
+            <i class="fas fa-shield-alt text-2xl text-red-500 mb-2"></i>
+            <span class="text-4xl font-bold text-slate-700 block" id="ivc-value">0%</span>
+            <span id="ivc-badge" class="inline-block mt-2 px-4 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-bold">--</span>
+            <div class="mt-3 text-[10px] text-slate-500 space-y-1">
+              <div class="flex items-center justify-center gap-2">
+                <span class="w-2 h-2 bg-green-500 rounded-full"></span><span>0%: Seguro</span>
+              </div>
+              <div class="flex items-center justify-center gap-2">
+                <span class="w-2 h-2 bg-yellow-500 rounded-full"></span><span>1-15%: Vulnerable</span>
+              </div>
+              <div class="flex items-center justify-center gap-2">
+                <span class="w-2 h-2 bg-red-500 rounded-full"></span><span>>15%: Inseguro</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -611,37 +1424,115 @@
 
     <!-- UX -->
     <section id="usability" class="content-section hidden space-y-6">
-      <div class="bg-white rounded-2xl shadow-md p-8 border border-slate-100 max-w-2xl mx-auto">
-        <div class="flex items-center mb-6">
-          <div class="bg-teal-100 p-3 rounded-full text-teal-600 mr-4"><i class="fas fa-users text-xl"></i></div>
-          <div>
-            <h2 class="text-xl font-bold text-slate-800">Usabilidad (ISO 9241)</h2>
-            <p class="text-slate-500 text-sm">Tasa de éxito en tareas de usuario</p>
+      <div class="bg-white rounded-2xl shadow-md p-8 border border-slate-100 max-w-3xl mx-auto">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center">
+            <div class="bg-teal-100 p-3 rounded-full text-teal-600 mr-4"><i class="fas fa-users text-xl"></i></div>
+            <div>
+              <h2 class="text-xl font-bold text-slate-800">Usabilidad (ISO 9241)</h2>
+              <p class="text-slate-500 text-sm">Tasa de éxito en tareas de usuario</p>
+            </div>
+          </div>
+          <div class="tooltip">
+            <i class="fas fa-question-circle text-2xl text-teal-400 help-icon"></i>
+            <span class="tooltiptext">
+              <strong>¿Qué es Usabilidad?</strong><br>
+              Mide qué tan fácil es para los usuarios completar tareas en tu aplicación. Una buena usabilidad significa una mejor experiencia de usuario.
+            </span>
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-4 mb-6">
-          <div class="input-group">
-            <label class="block text-sm font-semibold text-slate-600 mb-1">Tareas Totales</label>
-            <input type="number" id="ux-total" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg"
-              placeholder="40">
-            <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
-          </div>
-          <div class="input-group">
-            <label class="block text-sm font-semibold text-slate-600 mb-1">Exitosas</label>
-            <input type="number" id="ux-success" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg"
-              placeholder="35">
-            <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+        <!-- Info Box -->
+        <div class="info-box" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+          <div class="flex items-start gap-3">
+            <i class="fas fa-smile text-2xl mt-1"></i>
+            <div>
+              <strong class="block mb-1">¿Cómo se mide la usabilidad?</strong>
+              Define tareas específicas (ej: "registrarse", "buscar producto", "realizar pago") y observa cuántos usuarios las completan exitosamente. 
+              Una tasa >90% indica que tu interfaz es intuitiva y fácil de usar.
+            </div>
           </div>
         </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 my-6">
+          <div>
+            <div class="step-indicator mb-3">
+              <div class="step-number">1</div>
+              <span class="text-sm font-semibold text-slate-700">Define las tareas a evaluar</span>
+            </div>
+            <div class="input-group">
+              <label class="block text-sm font-semibold text-slate-600 mb-1 flex items-center gap-2">
+                Tareas Totales
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-teal-400 text-xs"></i>
+                  <span class="tooltiptext">
+                    Número total de tareas que los usuarios intentaron realizar durante las pruebas. Ejemplo: si 10 usuarios probaron 4 tareas cada uno, serían 40 intentos totales.
+                  </span>
+                </div>
+              </label>
+              <input type="number" id="ux-total" class="w-full p-3 bg-slate-50 border-2 border-slate-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
+                placeholder="40">
+              <p class="text-xs text-slate-400 mt-1"><i class="fas fa-tasks mr-1"></i>Total de intentos de tarea</p>
+              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+          </div>
+
+          <div>
+            <div class="step-indicator mb-3">
+              <div class="step-number">2</div>
+              <span class="text-sm font-semibold text-slate-700">Cuenta las completadas con éxito</span>
+            </div>
+            <div class="input-group">
+              <label class="block text-sm font-semibold text-slate-600 mb-1 flex items-center gap-2">
+                Tareas Exitosas
+                <div class="tooltip">
+                  <i class="fas fa-info-circle text-teal-400 text-xs"></i>
+                  <span class="tooltiptext">
+                    Número de tareas completadas sin ayuda y sin errores. Solo cuenta como exitosa si el usuario logró el objetivo sin frustrarse o abandonar.
+                  </span>
+                </div>
+              </label>
+              <input type="number" id="ux-success" class="w-full p-3 bg-slate-50 border-2 border-slate-300 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
+                placeholder="35">
+              <p class="text-xs text-slate-400 mt-1"><i class="fas fa-check-circle mr-1"></i>Completadas sin problemas</p>
+              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-indicator mb-3">
+          <div class="step-number">3</div>
+          <span class="text-sm font-semibold text-slate-700">Obtén la tasa de éxito</span>
+        </div>
         <button onclick="calcUX()"
-          class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all">
+          class="w-full bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
+          <i class="fas fa-user-check"></i>
           Calcular Tasa de Éxito
         </button>
 
-        <div id="ux-result" class="hidden mt-6 text-center">
-          <div class="text-4xl font-extrabold text-slate-800" id="ux-value">0%</div>
-          <div id="ux-badge" class="mt-2 inline-block px-4 py-1 rounded-full text-sm font-bold bg-gray-100">--</div>
+        <div id="ux-result" class="hidden mt-8 bg-gradient-to-br from-slate-50 to-teal-50 rounded-xl p-8 border-2 border-teal-200 text-center shadow-lg">
+          <i class="fas fa-smile-beam text-4xl text-teal-500 mb-3"></i>
+          <span class="text-slate-500 text-sm uppercase font-semibold block mb-2">Tasa de Éxito en Usabilidad</span>
+          <div class="text-6xl font-extrabold text-slate-800 mb-3" id="ux-value">0%</div>
+          <div id="ux-badge" class="inline-block px-6 py-2 rounded-full text-sm font-bold bg-gray-100 text-gray-700 shadow-md">--</div>
+          
+          <div class="mt-6 pt-6 border-t border-slate-300">
+            <p class="text-xs font-bold text-slate-600 uppercase mb-2">😊 Niveles de usabilidad:</p>
+            <div class="text-xs text-left space-y-1 text-slate-600 max-w-md mx-auto">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                <span><strong>> 90%:</strong> Excelente - Interfaz intuitiva y fácil de usar</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                <span><strong>70-90%:</strong> Aceptable - Hay aspectos mejorables</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+                <span><strong>< 70%:</strong> Problema - Rediseñar la experiencia de usuario</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -649,6 +1540,313 @@
   </main>
 
   <script>
+    // --- EVENT LOG SYSTEM ---
+    let eventLog = [];
+    let calculatedMetrics = new Set();
+    let metricsData = {};
+
+    function addEvent(type, metric, value, status) {
+      const event = {
+        timestamp: new Date().toLocaleString('es-ES'),
+        type: type,
+        metric: metric,
+        value: value,
+        status: status
+      };
+      eventLog.unshift(event); // Add to beginning
+      
+      // Agregar al conjunto de métricas calculadas y actualizar progreso
+      calculatedMetrics.add(metric);
+      updateProgress();
+      
+      // Guardar datos para el reporte PDF
+      metricsData[metric] = value;
+      
+      updateEventLogDisplay();
+    }
+    
+    // Función para actualizar el progreso
+    function updateProgress() {
+      const total = 7;
+      const calculated = calculatedMetrics.size;
+      const percentage = (calculated / total) * 100;
+      
+      document.getElementById('progressCount').textContent = calculated;
+      document.getElementById('progressBar').style.width = percentage + '%';
+    }
+
+    function updateEventLogDisplay() {
+      const logContainer = document.getElementById('event-log');
+      if (eventLog.length === 0) {
+        logContainer.innerHTML = '<p class="text-xs text-slate-400 text-center py-4">No hay eventos registrados aún</p>';
+        return;
+      }
+
+      let html = '<div class="space-y-2">';
+      eventLog.slice(0, 10).forEach(event => { // Show last 10
+        const statusColors = {
+          'success': 'bg-green-500/20 border-green-500 text-green-200',
+          'warning': 'bg-yellow-500/20 border-yellow-500 text-yellow-200',
+          'error': 'bg-red-500/20 border-red-500 text-red-200',
+          'info': 'bg-blue-500/20 border-blue-500 text-blue-200'
+        };
+        const statusIcons = {
+          'success': 'fa-check-circle',
+          'warning': 'fa-exclamation-triangle',
+          'error': 'fa-times-circle',
+          'info': 'fa-info-circle'
+        };
+        
+        html += `
+          <div class="border-l-2 ${statusColors[event.status] || statusColors.info} p-2 rounded text-xs">
+            <div class="flex items-start gap-2">
+              <i class="fas ${statusIcons[event.status] || statusIcons.info} mt-0.5 text-[10px]"></i>
+              <div class="flex-1">
+                <div class="font-semibold">${event.metric}</div>
+                <div class="text-[10px] opacity-80">${event.value} - ${event.timestamp}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      logContainer.innerHTML = html;
+    }
+
+    function clearEventLog() {
+      if (confirm('¿Estás seguro de que deseas limpiar todo el historial? Esta acción no se puede deshacer.')) {
+        eventLog = [];
+        calculatedMetrics.clear();
+        metricsData = {};
+        updateProgress();
+        updateEventLogDisplay();
+      }
+    }
+
+    function exportToCSV() {
+      if (eventLog.length === 0) {
+        alert('No hay datos para exportar. Realiza algunos cálculos primero.');
+        return;
+      }
+
+      // Create CSV content
+      let csv = 'Fecha y Hora,Tipo,Métrica,Valor,Estado\n';
+      eventLog.forEach(event => {
+        csv += `"${event.timestamp}","${event.type}","${event.metric}","${event.value}","${event.status}"\n`;
+      });
+
+      // Create download link
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `reporte_calidad_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // --- Función de generación de PDF ---
+    async function generatePDFReport() {
+      if (calculatedMetrics.size === 0) {
+        alert('⚠️ No hay cálculos disponibles. Por favor, calcula al menos una métrica antes de generar el reporte.');
+        return;
+      }
+      
+      const projectName = document.getElementById('projectName').value || 'Mi Proyecto de Calidad';
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      let yPos = 20;
+      
+      // === PORTADA ===
+      pdf.setFillColor(99, 102, 241); // Indigo
+      pdf.rect(0, 0, pageWidth, 60, 'F');
+      
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(28);
+      pdf.setFont(undefined, 'bold');
+      pdf.text('REPORTE DE CALIDAD', pageWidth / 2, 30, { align: 'center' });
+      
+      pdf.setFontSize(16);
+      pdf.setFont(undefined, 'normal');
+      pdf.text('SOFTWARE', pageWidth / 2, 45, { align: 'center' });
+      
+      yPos = 80;
+      pdf.setTextColor(0, 0, 0);
+      
+      // === INFORMACIÓN DEL PROYECTO ===
+      pdf.setFontSize(14);
+      pdf.setFont(undefined, 'bold');
+      pdf.text('Proyecto:', 20, yPos);
+      pdf.setFont(undefined, 'normal');
+      pdf.setFontSize(12);
+      pdf.text(projectName, 45, yPos);
+      
+      yPos += 10;
+      pdf.setFontSize(10);
+      pdf.text('Fecha: ' + new Date().toLocaleDateString('es-ES'), 20, yPos);
+      pdf.text('Hora: ' + new Date().toLocaleTimeString('es-ES'), 80, yPos);
+      
+      yPos += 8;
+      pdf.text('Materia: 27888 Aseguramiento de la Calidad de Software', 20, yPos);
+      pdf.text('Estudiante: Yeshua Chiliquinga', 20, yPos + 6);
+      
+      yPos += 18;
+      
+      // Línea divisoria
+      pdf.setDrawColor(200, 200, 200);
+      pdf.line(20, yPos, pageWidth - 20, yPos);
+      yPos += 10;
+      
+      // === RESUMEN EJECUTIVO ===
+      pdf.setFillColor(240, 240, 255);
+      pdf.rect(15, yPos - 5, pageWidth - 30, 8, 'F');
+      pdf.setFontSize(14);
+      pdf.setFont(undefined, 'bold');
+      pdf.setTextColor(99, 102, 241);
+      pdf.text('RESUMEN EJECUTIVO', 20, yPos);
+      yPos += 12;
+      
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(10);
+      pdf.setFont(undefined, 'normal');
+      
+      const summary = `Este reporte presenta los resultados del análisis de calidad realizado sobre el proyecto "${projectName}". Se han evaluado ${calculatedMetrics.size} de 7 métricas disponibles, incluyendo aspectos de calidad de proceso y producto según estándares ISO 29110 e ISO 9001, así como métricas de fiabilidad, rendimiento, calidad estructural y usabilidad.`;
+      
+      const summaryLines = pdf.splitTextToSize(summary, pageWidth - 40);
+      pdf.text(summaryLines, 20, yPos);
+      yPos += summaryLines.length * 5 + 10;
+      
+      // === MÉTRICAS CALCULADAS ===
+      pdf.setFillColor(240, 240, 255);
+      pdf.rect(15, yPos - 5, pageWidth - 30, 8, 'F');
+      pdf.setFontSize(14);
+      pdf.setFont(undefined, 'bold');
+      pdf.setTextColor(99, 102, 241);
+      pdf.text('MÉTRICAS CALCULADAS', 20, yPos);
+      yPos += 12;
+      
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(10);
+      
+      // Obtener valores actuales del dashboard
+      const metrics = [
+        { key: 'ICP', name: 'Índice de Cumplimiento de Procesos (ICP)', desc: 'ISO 29110', id: 'dash-icp' },
+        { key: 'NC', name: 'Nivel de No Conformidades (NC)', desc: 'ISO 9001', id: 'dash-nc' },
+        { key: 'MTBF', name: 'Tiempo Medio Entre Fallos (MTBF)', desc: 'Fiabilidad', id: 'dash-mtbf' },
+        { key: 'TPR', name: 'Tasa de Procesamiento (TPR)', desc: 'Rendimiento', id: 'dash-tpr' },
+        { key: 'CC', name: 'Complejidad Ciclomática (CC)', desc: 'Calidad Estructural', id: 'dash-cc' },
+        { key: 'IVC', name: 'Índice de Vulnerabilidades Críticas', desc: 'Seguridad', id: 'dash-ivc' },
+        { key: 'UX', name: 'Índice de Usabilidad (UX)', desc: 'Experiencia de Usuario', id: 'dash-ux' }
+      ];
+      
+      for (const metric of metrics) {
+        if (yPos > pageHeight - 30) {
+          pdf.addPage();
+          yPos = 20;
+        }
+        
+        const element = document.getElementById(metric.id);
+        if (element && element.textContent !== '--%' && element.textContent !== '--') {
+          const value = element.textContent;
+          
+          // Fondo de métrica
+          pdf.setFillColor(250, 250, 250);
+          pdf.rect(18, yPos - 4, pageWidth - 36, 18, 'F');
+          pdf.setDrawColor(220, 220, 220);
+          pdf.rect(18, yPos - 4, pageWidth - 36, 18, 'S');
+          
+          pdf.setFont(undefined, 'bold');
+          pdf.setFontSize(11);
+          pdf.text(metric.name, 22, yPos);
+          
+          pdf.setFont(undefined, 'normal');
+          pdf.setFontSize(9);
+          pdf.setTextColor(100, 100, 100);
+          pdf.text(metric.desc, 22, yPos + 5);
+          
+          pdf.setFont(undefined, 'bold');
+          pdf.setFontSize(14);
+          pdf.setTextColor(34, 197, 94); // Verde
+          pdf.text(String(value), pageWidth - 35, yPos + 3);
+          
+          pdf.setTextColor(0, 0, 0);
+          yPos += 22;
+        }
+      }
+      
+      yPos += 5;
+      
+      // === REGISTRO DE EVENTOS ===
+      if (eventLog.length > 0) {
+        pdf.addPage();
+        yPos = 20;
+        
+        pdf.setFillColor(240, 240, 255);
+        pdf.rect(15, yPos - 5, pageWidth - 30, 8, 'F');
+        pdf.setFontSize(14);
+        pdf.setFont(undefined, 'bold');
+        pdf.setTextColor(99, 102, 241);
+        pdf.text('REGISTRO DE EVENTOS', 20, yPos);
+        yPos += 12;
+        
+        pdf.setTextColor(0, 0, 0);
+        pdf.setFontSize(9);
+        pdf.setFont(undefined, 'bold');
+        
+        // Encabezados de tabla
+        pdf.text('Fecha/Hora', 20, yPos);
+        pdf.text('Métrica', 65, yPos);
+        pdf.text('Valor', 130, yPos);
+        pdf.text('Estado', 160, yPos);
+        yPos += 5;
+        
+        pdf.setDrawColor(200, 200, 200);
+        pdf.line(20, yPos, pageWidth - 20, yPos);
+        yPos += 5;
+        
+        pdf.setFont(undefined, 'normal');
+        
+        eventLog.slice(0, 30).forEach(event => {
+          if (yPos > pageHeight - 20) {
+            pdf.addPage();
+            yPos = 20;
+          }
+          
+          const timeText = event.timestamp.length > 17 ? event.timestamp.substring(11) : event.timestamp;
+          pdf.text(timeText, 20, yPos);
+          
+          const metricText = event.metric.length > 20 ? event.metric.substring(0, 20) + '...' : event.metric;
+          pdf.text(metricText, 65, yPos);
+          
+          pdf.text(String(event.value), 130, yPos);
+          pdf.text(event.status === 'success' ? 'OK' : 'Error', 160, yPos);
+          yPos += 6;
+        });
+      }
+      
+      // === PIE DE PÁGINA ===
+      const totalPages = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFontSize(8);
+        pdf.setTextColor(150, 150, 150);
+        pdf.text(`Página ${i} de ${totalPages}`, pageWidth / 2, pageHeight - 10, { align: 'center' });
+        pdf.text('Generado por Sistema de Métricas de Calidad Software', pageWidth / 2, pageHeight - 5, { align: 'center' });
+      }
+      
+      // Descargar PDF
+      const fileName = `Reporte_Calidad_${projectName.replace(/[^a-z0-9]/gi, '_')}_${new Date().getTime()}.pdf`;
+      pdf.save(fileName);
+      
+      logEvent('Reporte PDF Generado', fileName, 'export', 'success');
+      alert('✅ Reporte PDF generado exitosamente: ' + fileName);
+    }
+
     // --- Navigation ---
     function showSection(sectionId) {
       document.querySelectorAll('.content-section').forEach(sec => sec.classList.add('hidden'));
@@ -658,7 +1856,7 @@
       document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active', 'border-l-4', 'border-indigo-500'));
       document.getElementById('nav-' + sectionId).classList.add('active');
 
-      // Dynamic Title
+      // Dynamic Title & Subtitle
       const titles = {
         'dashboard': 'Panel de Control',
         'iso29110': 'Gestión VSE (ISO 29110)',
@@ -668,7 +1866,17 @@
         'structure': 'Calidad Estructural',
         'usability': 'Usabilidad'
       };
+      const subtitles = {
+        'dashboard': 'Sistema de gestión y monitorización de métricas de calidad de software',
+        'iso29110': 'Índice de Cumplimiento de Procesos para Microempresas',
+        'iso9001': 'Evaluación de No Conformidades en Auditorías',
+        'reliability': 'Análisis del Tiempo Medio Entre Fallos',
+        'performance': 'Medición de Tiempos de Respuesta',
+        'structure': 'Análisis de Complejidad y Vulnerabilidades',
+        'usability': 'Evaluación de Experiencia de Usuario'
+      };
       document.getElementById('page-title').innerText = titles[sectionId] || 'Sistema de Calidad';
+      document.getElementById('page-subtitle').innerText = subtitles[sectionId] || 'Sistema de gestión de calidad';
     }
 
     // --- VALIDATION HELPER ---
@@ -757,6 +1965,9 @@
       updateBadge('icp-badge', type === 'good' ? 'OPTIMIZADO' : (type === 'warning' ? 'ACEPTABLE' : 'BAJO'), type, 'icp-bar');
       document.getElementById('icp-feedback').innerText = msg;
       updateChartData(0, icp);
+      
+      // Log event
+      addEvent('Cálculo', 'ISO 29110 (ICP)', finalVal, type === 'good' ? 'success' : (type === 'warning' ? 'warning' : 'error'));
     }
 
     // 2. NC
@@ -767,14 +1978,19 @@
       if (total === null || found === null) return;
 
       const nc = found / total;
-      document.getElementById('nc-value').innerText = nc.toFixed(2);
+      const ncDisplay = nc.toFixed(2);
+      document.getElementById('nc-value').innerText = ncDisplay;
       document.getElementById('nc-result').classList.remove('hidden');
+      document.getElementById('dash-nc').innerText = ncDisplay;
 
       let type = 'bad';
       if (nc === 0) type = 'good';
       else if (nc < 0.25) type = 'warning';
 
       updateBadge('nc-badge', type === 'good' ? 'PERFECTO' : (type === 'warning' ? 'GESTIONABLE' : 'FALLIDO'), type, 'nc-bar');
+      
+      // Log event
+      addEvent('Cálculo', 'ISO 9001 (NC)', ncDisplay, type === 'good' ? 'success' : (type === 'warning' ? 'warning' : 'error'));
     }
 
     // 3. MTBF
@@ -806,6 +2022,9 @@
 
       updateBadge('mtbf-badge', type === 'good' ? 'ESTABLE' : (type === 'warning' ? 'ALERTA' : 'CRÍTICO'), type, 'mtbf-bar');
       updateChartData(1, Math.min(mtbf, 100)); // Cap for radar
+      
+      // Log event
+      addEvent('Cálculo', 'Fiabilidad (MTBF)', display, type === 'good' ? 'success' : (type === 'warning' ? 'warning' : 'error'));
     }
 
     // 4. TPR
@@ -831,6 +2050,9 @@
       if (tpr > 1000) chartVal = 20;
       else if (tpr > 200) chartVal = 60;
       updateChartData(2, chartVal);
+      
+      // Log event
+      addEvent('Cálculo', 'Rendimiento (TPR)', tpr.toFixed(0) + 'ms', type === 'good' ? 'success' : (type === 'warning' ? 'warning' : 'error'));
     }
 
     // 5. CC
@@ -863,9 +2085,15 @@
         (type === 'warning' ? "inline-block mt-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-bold" :
           "inline-block mt-1 px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-bold");
 
+      // Update dashboard
+      document.getElementById('dash-cc').innerText = cc.toString();
+      
       // Chart (Inverse: lower is better)
       let chartScore = Math.max(0, 100 - (cc * 2));
       updateChartData(3, chartScore);
+      
+      // Log event
+      addEvent('Cálculo', 'Complejidad Ciclomática', cc.toString(), type === 'good' ? 'success' : (type === 'warning' ? 'warning' : 'error'));
     }
 
     // 6. IVC
@@ -894,6 +2122,12 @@
       badge.className = type === 'good' ? "inline-block mt-1 px-3 py-1 bg-green-100 text-green-700 rounded text-xs font-bold" :
         (type === 'warning' ? "inline-block mt-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-bold" :
           "inline-block mt-1 px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-bold");
+      
+      // Update dashboard
+      document.getElementById('dash-ivc').innerText = ivc.toFixed(1) + '%';
+      
+      // Log event
+      addEvent('Cálculo', 'Índice Vulnerabilidad', ivc.toFixed(1) + '%', type === 'good' ? 'success' : (type === 'warning' ? 'warning' : 'error'));
     }
 
     // 7. UX
@@ -922,9 +2156,80 @@
         (type === 'warning' ? "mt-2 inline-block px-4 py-1 rounded-full text-sm font-bold bg-yellow-100 text-yellow-800" :
           "mt-2 inline-block px-4 py-1 rounded-full text-sm font-bold bg-red-100 text-red-700");
 
+      // Update dashboard
+      document.getElementById('dash-ux').innerText = rate.toFixed(1) + '%';
+      
       updateChartData(4, rate);
+      
+      // Log event
+      addEvent('Cálculo', 'Usabilidad (UX)', rate.toFixed(1) + '%', type === 'good' ? 'success' : (type === 'warning' ? 'warning' : 'error'));
     }
 
+    // --- SISTEMA DE TOOLTIPS INTELIGENTE ---
+    document.addEventListener('DOMContentLoaded', function() {
+      const tooltips = document.querySelectorAll('.tooltip');
+      
+      tooltips.forEach(tooltip => {
+        const tooltipText = tooltip.querySelector('.tooltiptext');
+        if (!tooltipText) return;
+        
+        tooltip.addEventListener('mouseenter', function(e) {
+          const rect = tooltip.getBoundingClientRect();
+          const tooltipRect = tooltipText.getBoundingClientRect();
+          
+          // Calcular espacio disponible
+          const spaceAbove = rect.top;
+          const spaceBelow = window.innerHeight - rect.bottom;
+          const spaceLeft = rect.left;
+          const spaceRight = window.innerWidth - rect.right;
+          
+          // Determinar la mejor posición
+          let position = 'top';
+          
+          // Si no hay espacio arriba, mostrar abajo
+          if (spaceAbove < 150 && spaceBelow > 150) {
+            position = 'bottom';
+            tooltipText.style.top = (rect.bottom + 10) + 'px';
+          } 
+          // Si hay espacio arriba, mostrar arriba
+          else if (spaceAbove > 150) {
+            position = 'top';
+            tooltipText.style.top = (rect.top - 10) + 'px';
+            tooltipText.style.transform = 'translateY(-100%)';
+          }
+          // Si no hay espacio ni arriba ni abajo, mostrar al lado
+          else if (spaceRight > 300) {
+            position = 'right';
+            tooltipText.style.top = rect.top + 'px';
+            tooltipText.style.left = (rect.right + 10) + 'px';
+            tooltipText.style.transform = 'translateY(-50%)';
+          } else if (spaceLeft > 300) {
+            position = 'left';
+            tooltipText.style.top = rect.top + 'px';
+            tooltipText.style.left = (rect.left - 10) + 'px';
+            tooltipText.style.transform = 'translate(-100%, -50%)';
+          }
+          
+          // Centrar horizontalmente si es top o bottom
+          if (position === 'top' || position === 'bottom') {
+            const tooltipWidth = 280;
+            let leftPos = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+            
+            // Ajustar si se sale por la izquierda
+            if (leftPos < 10) leftPos = 10;
+            
+            // Ajustar si se sale por la derecha
+            if (leftPos + tooltipWidth > window.innerWidth - 10) {
+              leftPos = window.innerWidth - tooltipWidth - 10;
+            }
+            
+            tooltipText.style.left = leftPos + 'px';
+          }
+          
+          tooltipText.setAttribute('data-position', position);
+        });
+      });
+    });
 
     // --- CHART ---
     let qualityChart;
