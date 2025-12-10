@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Gestión de Calidad - Yeshua Chiliquinga</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- MathJax -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Sidebar Animations */
+    .sidebar-link {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sidebar-link::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: #6366f1;
+      /* Indigo-500 */
+      transform: scaleY(0);
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-link.active::before {
+      transform: scaleY(1);
+    }
+
+    .sidebar-link.active {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+    }
+
+    /* Card Effects */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .input-group:focus-within label {
+      color: #4f46e5;
+    }
+
+    .input-group:focus-within input {
+      border-color: #4f46e5;
+      ring: 2px solid #4f46e5;
+    }
+
+    /* Error Animation */
+    .shake {
+      animation: shake 0.82s cubic-bezier(.36, .07, .19, .97) both;
+    }
+
+    @keyframes shake {
+
+      10%,
+      90% {
+        transform: translate3d(-1px, 0, 0);
+      }
+
+      20%,
+      80% {
+        transform: translate3d(2px, 0, 0);
+      }
+
+      30%,
+      50%,
+      70% {
+        transform: translate3d(-4px, 0, 0);
+      }
+
+      40%,
+      60% {
+        transform: translate3d(4px, 0, 0);
+      }
+    }
+  </style>
+</head>
+
+<body class="flex h-screen overflow-hidden text-slate-800">
+
+  <!-- Sidebar -->
+  <aside class="w-72 bg-slate-900 text-slate-300 flex flex-col shadow-2xl z-20 transition-all">
+    <!-- Profile / Header Section -->
+    <div class="p-6 border-b border-slate-700 bg-slate-800">
+      <div class="flex items-center gap-3 mb-4">
+        <div
+          class="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+          YC
+        </div>
+        <div>
+          <h2 class="text-white font-bold text-sm leading-tight">Yeshua Chiliquinga</h2>
+          <p class="text-xs text-indigo-400">Estudiante</p>
+        </div>
+      </div>
+      <div class="bg-slate-900/50 p-3 rounded-lg border border-slate-700">
+        <p class="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-1">Materia</p>
+        <p class="text-xs text-slate-200 font-medium">27888 Aseguramiento de la Calidad de Software</p>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="flex-1 overflow-y-auto py-6 space-y-1">
+      <a href="#" onclick="showSection('dashboard')" id="nav-dashboard"
+        class="sidebar-link active flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
+        <i class="fas fa-chart-pie w-6 group-hover:text-indigo-400 transition-colors"></i>
+        <span class="font-medium">Dashboard General</span>
+      </a>
+
+      <div class="px-6 py-4 mt-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Calidad de Proceso</div>
+
+      <a href="#" onclick="showSection('iso29110')" id="nav-iso29110"
+        class="sidebar-link flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
+        <i class="fas fa-tasks w-6 group-hover:text-blue-400 transition-colors"></i>
+        <span>ISO 29110 (ICP)</span>
+      </a>
+      <a href="#" onclick="showSection('iso9001')" id="nav-iso9001"
+        class="sidebar-link flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
+        <i class="fas fa-file-contract w-6 group-hover:text-yellow-400 transition-colors"></i>
+        <span>ISO 9001 (NC)</span>
+      </a>
+
+      <div class="px-6 py-4 mt-2 text-xs font-bold text-slate-500 uppercase tracking-widest">Calidad de Producto</div>
+
+      <a href="#" onclick="showSection('reliability')" id="nav-reliability"
+        class="sidebar-link flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
+        <i class="fas fa-server w-6 group-hover:text-red-400 transition-colors"></i>
+        <span>Fiabilidad (MTBF)</span>
+      </a>
+      <a href="#" onclick="showSection('performance')" id="nav-performance"
+        class="sidebar-link flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
+        <i class="fas fa-tachometer-alt w-6 group-hover:text-green-400 transition-colors"></i>
+        <span>Rendimiento (TPR)</span>
+      </a>
+      <a href="#" onclick="showSection('structure')" id="nav-structure"
+        class="sidebar-link flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
+        <i class="fas fa-code-branch w-6 group-hover:text-purple-400 transition-colors"></i>
+        <span>Estructural (CISQ)</span>
+      </a>
+      <a href="#" onclick="showSection('usability')" id="nav-usability"
+        class="sidebar-link flex items-center px-6 py-3 hover:bg-slate-800 hover:text-white transition-all group">
+        <i class="fas fa-users w-6 group-hover:text-teal-400 transition-colors"></i>
+        <span>Usabilidad (UX)</span>
+      </a>
+    </nav>
+
+    <div class="p-4 border-t border-slate-700 text-center text-xs text-slate-500">
+      &copy; 2024 Sistema Integrado
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 overflow-y-auto bg-slate-50 p-8 relative">
+    <!-- Background decoration -->
+    <div class="absolute top-0 left-0 w-full h-64 bg-gradient-to-r from-indigo-600 to-purple-700 -z-10"></div>
+
+    <!-- Header Title (Dynamic) -->
+    <div class="mb-8 text-white flex justify-between items-end">
+      <div>
+        <h1 class="text-3xl font-bold mb-1" id="page-title">Panel de Control</h1>
+        <p class="text-indigo-100 opacity-90 text-sm">Monitorización de métricas de calidad de software</p>
+      </div>
+      <div class="text-right hidden md:block">
+        <div class="text-xs bg-white/20 backdrop-blur-md px-3 py-1 rounded-full inline-block border border-white/30">
+          <i class="fas fa-circle text-green-400 text-[8px] mr-2"></i>Sistema Activo
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard Section -->
+    <section id="dashboard" class="content-section space-y-8">
+      <!-- KPI Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Card 1 -->
+        <div
+          class="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-blue-500 hover:-translate-y-1 transition-transform duration-300">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <p class="text-xs font-bold text-slate-400 uppercase">Cumplimiento ISO 29110</p>
+              <h3 class="text-2xl font-bold text-slate-700 mt-1" id="dash-icp">--%</h3>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-500 flex items-center justify-center">
+              <i class="fas fa-check-circle text-xl"></i>
+            </div>
+          </div>
+          <div class="text-xs text-slate-500">
+            <span class="text-blue-600 font-semibold">Proceso:</span> Gestión de Proyectos
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div
+          class="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-red-500 hover:-translate-y-1 transition-transform duration-300">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <p class="text-xs font-bold text-slate-400 uppercase">Fiabilidad (MTBF)</p>
+              <h3 class="text-2xl font-bold text-slate-700 mt-1" id="dash-mtbf">-- h</h3>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-red-50 text-red-500 flex items-center justify-center">
+              <i class="fas fa-heartbeat text-xl"></i>
+            </div>
+          </div>
+          <div class="text-xs text-slate-500">
+            <span class="text-red-600 font-semibold">Crítico:</span> Disponibilidad del sistema
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div
+          class="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-green-500 hover:-translate-y-1 transition-transform duration-300">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <p class="text-xs font-bold text-slate-400 uppercase">Rendimiento (TPR)</p>
+              <h3 class="text-2xl font-bold text-slate-700 mt-1" id="dash-tpr">-- ms</h3>
+            </div>
+            <div class="w-10 h-10 rounded-lg bg-green-50 text-green-500 flex items-center justify-center">
+              <i class="fas fa-stopwatch text-xl"></i>
+            </div>
+          </div>
+          <div class="text-xs text-slate-500">
+            <span class="text-green-600 font-semibold">KPI:</span>
+            < 200ms </div>
+          </div>
+
+          <!-- Card 4 -->
+          <div
+            class="bg-white rounded-2xl p-6 shadow-lg border-b-4 border-purple-500 hover:-translate-y-1 transition-transform duration-300">
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <p class="text-xs font-bold text-slate-400 uppercase">Complejidad (CC)</p>
+                <h3 class="text-2xl font-bold text-slate-700 mt-1" id="dash-cc">--</h3>
+              </div>
+              <div class="w-10 h-10 rounded-lg bg-purple-50 text-purple-500 flex items-center justify-center">
+                <i class="fas fa-code text-xl"></i>
+              </div>
+            </div>
+            <div class="text-xs text-slate-500">
+              <span class="text-purple-600 font-semibold">McCabe:</span> Mantenibilidad
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts & Actions -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6">
+            <h3 class="font-bold text-slate-700 mb-6 flex items-center">
+              <i class="fas fa-radar text-indigo-500 mr-2"></i>Radar de Calidad Integral
+            </h3>
+            <div class="h-64 flex justify-center">
+              <canvas id="qualityChart"></canvas>
+            </div>
+          </div>
+
+          <div
+            class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-lg p-6 text-white flex flex-col justify-between">
+            <div>
+              <h3 class="font-bold text-lg mb-2">Simulación de Eventos</h3>
+              <p class="text-slate-400 text-sm mb-6">Herramientas rápidas para registrar incidencias en tiempo real.</p>
+
+              <div class="space-y-3">
+                <button
+                  class="w-full bg-red-500/20 hover:bg-red-500/40 border border-red-500/50 text-red-200 p-3 rounded-xl flex items-center transition-all group"
+                  onclick="alert('Incidente registrado: Exception NullPointer en módulo Login.')">
+                  <div
+                    class="bg-red-500 text-white w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-bug"></i>
+                  </div>
+                  <span class="text-sm font-semibold">Registrar Bug Crítico</span>
+                </button>
+
+                <button
+                  class="w-full bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/50 text-blue-200 p-3 rounded-xl flex items-center transition-all group"
+                  onclick="alert('Auditoría iniciada: Revisando documentación ISO 29110.')">
+                  <div
+                    class="bg-blue-500 text-white w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition-transform">
+                    <i class="fas fa-clipboard-list"></i>
+                  </div>
+                  <span class="text-sm font-semibold">Iniciar Auditoría</span>
+                </button>
+              </div>
+            </div>
+            <div class="mt-6 pt-6 border-t border-slate-700 text-center">
+              <p class="text-xs text-slate-500">Sistema v2.0 - Developed by Yeshua C.</p>
+            </div>
+          </div>
+        </div>
+    </section>
+
+    <!-- Template for Calculator Sections -->
+
+    <!-- ISO 29110 -->
+    <section id="iso29110" class="content-section hidden space-y-6">
+      <div class="bg-white rounded-2xl shadow-md p-8 border border-slate-100">
+        <div class="flex items-center mb-6">
+          <div class="bg-blue-100 p-3 rounded-full text-blue-600 mr-4"><i class="fas fa-tasks text-xl"></i></div>
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">Cálculo de ICP (ISO 29110)</h2>
+            <p class="text-slate-500 text-sm">Índice de Cumplimiento de Procesos para Microempresas (VSE)</p>
+          </div>
+        </div>
+
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg">
+          <div class="text-sm text-blue-900 overflow-x-auto">
+            $$ICP = \frac{\text{Actividades Realizadas}}{\text{Actividades Planificadas}} \times 100$$
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div class="space-y-5">
+            <div class="input-group">
+              <label class="block text-sm font-semibold text-slate-600 mb-1">Actividades Planificadas</label>
+              <input type="number" id="icp-planned" min="1"
+                class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none transition-all placeholder-slate-400 text-slate-700"
+                placeholder="Ej: 15">
+              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+            <div class="input-group">
+              <label class="block text-sm font-semibold text-slate-600 mb-1">Actividades Realizadas</label>
+              <input type="number" id="icp-realized" min="0"
+                class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none transition-all placeholder-slate-400 text-slate-700"
+                placeholder="Ej: 13">
+              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+            <button onclick="calcICP()"
+              class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all">
+              Calcular Cumplimiento
+            </button>
+          </div>
+
+          <!-- Result Panel -->
+          <div id="icp-result"
+            class="hidden bg-slate-50 rounded-xl p-6 border border-slate-200 flex flex-col justify-center items-center text-center relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-2 h-full bg-gray-300" id="icp-bar"></div>
+            <span class="text-slate-500 text-sm uppercase tracking-wider font-semibold">Resultado Final</span>
+            <span class="text-5xl font-extrabold text-slate-800 my-3" id="icp-value">0%</span>
+            <span id="icp-badge" class="px-4 py-1 rounded-full text-sm font-bold bg-gray-200 text-gray-700">--</span>
+            <p id="icp-feedback" class="text-sm mt-4 text-slate-600 max-w-xs"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ISO 9001 -->
+    <section id="iso9001" class="content-section hidden space-y-6">
+      <div class="bg-white rounded-2xl shadow-md p-8 border border-slate-100">
+        <div class="flex items-center mb-6">
+          <div class="bg-yellow-100 p-3 rounded-full text-yellow-600 mr-4"><i class="fas fa-file-contract text-xl"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">No Conformidades (ISO 9001)</h2>
+            <p class="text-slate-500 text-sm">Evaluación de salud del sistema de gestión</p>
+          </div>
+        </div>
+
+        <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6 rounded-r-lg">
+          <div class="text-sm text-yellow-900 overflow-x-auto">
+            $$NC = \frac{\text{No Conformidades Encontradas}}{\text{Total Procesos Auditados}}$$
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div class="space-y-5">
+            <div class="input-group">
+              <label class="block text-sm font-semibold text-slate-600 mb-1">Total Procesos Auditados</label>
+              <input type="number" id="nc-total" min="1"
+                class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none transition-all"
+                placeholder="Ej: 4">
+              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+            <div class="input-group">
+              <label class="block text-sm font-semibold text-slate-600 mb-1">Hallazgos (No Conformidades)</label>
+              <input type="number" id="nc-found" min="0"
+                class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none transition-all"
+                placeholder="Ej: 1">
+              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+            <button onclick="calcNC()"
+              class="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all">
+              Calcular Riesgo
+            </button>
+          </div>
+
+          <div id="nc-result"
+            class="hidden bg-slate-50 rounded-xl p-6 border border-slate-200 flex flex-col justify-center items-center text-center relative">
+            <div class="absolute top-0 left-0 w-2 h-full bg-gray-300" id="nc-bar"></div>
+            <span class="text-slate-500 text-sm uppercase font-semibold">Índice NC</span>
+            <span class="text-5xl font-extrabold text-slate-800 my-3" id="nc-value">0</span>
+            <span id="nc-badge" class="px-4 py-1 rounded-full text-sm font-bold bg-gray-200 text-gray-700">--</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MTBF -->
+    <section id="reliability" class="content-section hidden space-y-6">
+      <div class="bg-white rounded-2xl shadow-md p-8 border border-slate-100">
+        <div class="flex items-center mb-6">
+          <div class="bg-red-100 p-3 rounded-full text-red-600 mr-4"><i class="fas fa-server text-xl"></i></div>
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">Fiabilidad: MTBF (ISO 25010)</h2>
+            <p class="text-slate-500 text-sm">Tiempo Medio Entre Fallos</p>
+          </div>
+        </div>
+
+        <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-lg">
+          <div class="text-sm text-red-900 overflow-x-auto">
+            $$MTBF = \frac{\text{Tiempo Total Operación}}{\text{Número de Fallos}}$$
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div class="space-y-5">
+            <div class="input-group">
+              <label class="block text-sm font-semibold text-slate-600 mb-1">Tiempo de Operación (Horas)</label>
+              <input type="number" id="mtbf-time" min="1"
+                class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none transition-all"
+                placeholder="Ej: 168 (1 semana)">
+              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+            <div class="input-group">
+              <label class="block text-sm font-semibold text-slate-600 mb-1">Número de Fallos</label>
+              <input type="number" id="mtbf-fails" min="0"
+                class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none transition-all"
+                placeholder="Ej: 8">
+              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+            <button onclick="calcMTBF()"
+              class="w-full bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all">
+              Calcular Estabilidad
+            </button>
+          </div>
+
+          <div id="mtbf-result"
+            class="hidden bg-slate-50 rounded-xl p-6 border border-slate-200 flex flex-col justify-center items-center text-center relative">
+            <div class="absolute top-0 left-0 w-2 h-full bg-gray-300" id="mtbf-bar"></div>
+            <span class="text-slate-500 text-sm uppercase font-semibold">Frecuencia de Fallo</span>
+            <span class="text-5xl font-extrabold text-slate-800 my-3" id="mtbf-value">0h</span>
+            <span id="mtbf-badge" class="px-4 py-1 rounded-full text-sm font-bold bg-gray-200 text-gray-700">--</span>
+            <p class="text-xs text-slate-400 mt-4"><i class="fas fa-info-circle mr-1"></i> Basado en logs del servidor
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TPR -->
+    <section id="performance" class="content-section hidden space-y-6">
+      <div class="bg-white rounded-2xl shadow-md p-8 border border-slate-100">
+        <div class="flex items-center mb-6">
+          <div class="bg-green-100 p-3 rounded-full text-green-600 mr-4"><i class="fas fa-tachometer-alt text-xl"></i>
+          </div>
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">Rendimiento: TPR</h2>
+            <p class="text-slate-500 text-sm">Tiempo Promedio de Respuesta</p>
+          </div>
+        </div>
+
+        <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded-r-lg">
+          <div class="text-sm text-green-900 overflow-x-auto">
+            $$TPR = \frac{\sum \text{Tiempos de Respuesta}}{\text{Número de Solicitudes}}$$
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div class="space-y-5">
+            <div class="input-group">
+              <label class="block text-sm font-semibold text-slate-600 mb-1">Tiempo Acumulado (ms)</label>
+              <input type="number" id="tpr-total-time" min="1"
+                class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none transition-all"
+                placeholder="Ej: 5400">
+              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+            <div class="input-group">
+              <label class="block text-sm font-semibold text-slate-600 mb-1">Total Solicitudes</label>
+              <input type="number" id="tpr-requests" min="1"
+                class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none transition-all"
+                placeholder="Ej: 300">
+              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+            <button onclick="calcTPR()"
+              class="w-full bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all">
+              Calcular Latencia
+            </button>
+          </div>
+
+          <div id="tpr-result"
+            class="hidden bg-slate-50 rounded-xl p-6 border border-slate-200 flex flex-col justify-center items-center text-center relative">
+            <div class="absolute top-0 left-0 w-2 h-full bg-gray-300" id="tpr-bar"></div>
+            <span class="text-slate-500 text-sm uppercase font-semibold">Latencia Media</span>
+            <span class="text-5xl font-extrabold text-slate-800 my-3" id="tpr-value">0ms</span>
+            <span id="tpr-badge" class="px-4 py-1 rounded-full text-sm font-bold bg-gray-200 text-gray-700">--</span>
+            <div class="mt-4 flex gap-2 text-[10px] text-slate-500 uppercase">
+              <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-green-500 mr-1"></span>
+                <200ms< /span>
+                  <span class="flex items-center"><span class="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>
+                    <1s< /span>
+                      <span class="flex items-center"><span
+                          class="w-2 h-2 rounded-full bg-red-500 mr-1"></span>>1s</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CISQ -->
+    <section id="structure" class="content-section hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- McCabe -->
+        <div class="bg-white rounded-2xl shadow-md p-8 border border-slate-100">
+          <h3 class="text-lg font-bold text-slate-700 mb-4 border-b pb-2">Complejidad Ciclomática</h3>
+          <div class="mb-4 text-xs bg-slate-100 p-2 rounded font-mono text-slate-600">CC = E - N + 2P</div>
+
+          <div class="grid grid-cols-3 gap-3 mb-4">
+            <div class="input-group">
+              <label class="text-xs font-bold text-slate-500">Aristas (E)</label>
+              <input type="number" id="cc-edges" class="w-full p-2 border rounded-md" placeholder="25">
+            </div>
+            <div class="input-group">
+              <label class="text-xs font-bold text-slate-500">Nodos (N)</label>
+              <input type="number" id="cc-nodes" class="w-full p-2 border rounded-md" placeholder="20">
+            </div>
+            <div class="input-group">
+              <label class="text-xs font-bold text-slate-500">Comp (P)</label>
+              <input type="number" id="cc-comp" class="w-full p-2 border rounded-md" value="1">
+            </div>
+          </div>
+          <p class="hidden text-red-500 text-xs mb-3 error-msg" id="cc-error"></p>
+
+          <button onclick="calcCC()"
+            class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded-lg transition-colors">Calcular</button>
+
+          <div id="cc-result" class="hidden mt-4 pt-4 border-t text-center">
+            <span class="text-3xl font-bold text-slate-700 block" id="cc-value">0</span>
+            <span id="cc-badge" class="inline-block mt-1 px-3 py-1 bg-gray-100 rounded text-xs font-bold">--</span>
+          </div>
+        </div>
+
+        <!-- IVC -->
+        <div class="bg-white rounded-2xl shadow-md p-8 border border-slate-100">
+          <h3 class="text-lg font-bold text-slate-700 mb-4 border-b pb-2">Índice Vulnerabilidad (IVC)</h3>
+          <div class="mb-4 text-xs bg-slate-100 p-2 rounded font-mono text-slate-600">IVC = (Críticas / Totales) %</div>
+
+          <div class="space-y-3 mb-4">
+            <div class="input-group">
+              <label class="text-xs font-bold text-slate-500">Total Vulnerabilidades</label>
+              <input type="number" id="ivc-total" class="w-full p-2 border rounded-md" placeholder="14">
+              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+            <div class="input-group">
+              <label class="text-xs font-bold text-slate-500">Críticas (SQLi, XSS)</label>
+              <input type="number" id="ivc-critical" class="w-full p-2 border rounded-md" placeholder="2">
+              <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+            </div>
+          </div>
+
+          <button onclick="calcIVC()"
+            class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 rounded-lg transition-colors">Calcular
+            Seguridad</button>
+
+          <div id="ivc-result" class="hidden mt-4 pt-4 border-t text-center">
+            <span class="text-3xl font-bold text-slate-700 block" id="ivc-value">0%</span>
+            <span id="ivc-badge" class="inline-block mt-1 px-3 py-1 bg-gray-100 rounded text-xs font-bold">--</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- UX -->
+    <section id="usability" class="content-section hidden space-y-6">
+      <div class="bg-white rounded-2xl shadow-md p-8 border border-slate-100 max-w-2xl mx-auto">
+        <div class="flex items-center mb-6">
+          <div class="bg-teal-100 p-3 rounded-full text-teal-600 mr-4"><i class="fas fa-users text-xl"></i></div>
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">Usabilidad (ISO 9241)</h2>
+            <p class="text-slate-500 text-sm">Tasa de éxito en tareas de usuario</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div class="input-group">
+            <label class="block text-sm font-semibold text-slate-600 mb-1">Tareas Totales</label>
+            <input type="number" id="ux-total" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg"
+              placeholder="40">
+            <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+          </div>
+          <div class="input-group">
+            <label class="block text-sm font-semibold text-slate-600 mb-1">Exitosas</label>
+            <input type="number" id="ux-success" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg"
+              placeholder="35">
+            <p class="hidden text-red-500 text-xs mt-1 error-msg"></p>
+          </div>
+        </div>
+        <button onclick="calcUX()"
+          class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all">
+          Calcular Tasa de Éxito
+        </button>
+
+        <div id="ux-result" class="hidden mt-6 text-center">
+          <div class="text-4xl font-extrabold text-slate-800" id="ux-value">0%</div>
+          <div id="ux-badge" class="mt-2 inline-block px-4 py-1 rounded-full text-sm font-bold bg-gray-100">--</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // --- Navigation ---
+    function showSection(sectionId) {
+      document.querySelectorAll('.content-section').forEach(sec => sec.classList.add('hidden'));
+      document.getElementById(sectionId).classList.remove('hidden');
+
+      // Sidebar Active State
+      document.querySelectorAll('.sidebar-link').forEach(link => link.classList.remove('active', 'border-l-4', 'border-indigo-500'));
+      document.getElementById('nav-' + sectionId).classList.add('active');
+
+      // Dynamic Title
+      const titles = {
+        'dashboard': 'Panel de Control',
+        'iso29110': 'Gestión VSE (ISO 29110)',
+        'iso9001': 'Auditoría (ISO 9001)',
+        'reliability': 'Fiabilidad (ISO 25010)',
+        'performance': 'Rendimiento',
+        'structure': 'Calidad Estructural',
+        'usability': 'Usabilidad'
+      };
+      document.getElementById('page-title').innerText = titles[sectionId] || 'Sistema de Calidad';
+    }
+
+    // --- VALIDATION HELPER ---
+    function validateInput(inputElement, conditionFn, errorMsg) {
+      const val = parseFloat(inputElement.value);
+      const parent = inputElement.parentElement;
+      const errorP = parent.querySelector('.error-msg');
+
+      // Reset previous error
+      inputElement.classList.remove('border-red-500', 'shake');
+      if (errorP) errorP.classList.add('hidden');
+
+      // Check Empty
+      if (isNaN(val) && inputElement.value === "") {
+        showError(inputElement, errorP, "Este campo es obligatorio.");
+        return null;
+      }
+
+      // Custom Condition
+      if (!conditionFn(val)) {
+        showError(inputElement, errorP, errorMsg);
+        return null;
+      }
+      return val;
+    }
+
+    function showError(input, errorElement, msg) {
+      input.classList.add('border-red-500', 'shake');
+      if (errorElement) {
+        errorElement.innerText = msg;
+        errorElement.classList.remove('hidden');
+      }
+      setTimeout(() => input.classList.remove('shake'), 820);
+    }
+
+    // --- UI HELPERS ---
+    function updateBadge(id, text, type, barId) {
+      const el = document.getElementById(id);
+      const bar = document.getElementById(barId);
+      el.innerText = text;
+
+      let colorClass = "bg-gray-200 text-gray-700";
+      let barColor = "bg-gray-300";
+
+      if (type === 'good') {
+        colorClass = "bg-green-100 text-green-700";
+        barColor = "bg-green-500";
+      } else if (type === 'warning') {
+        colorClass = "bg-yellow-100 text-yellow-800";
+        barColor = "bg-yellow-500";
+      } else if (type === 'bad') {
+        colorClass = "bg-red-100 text-red-700";
+        barColor = "bg-red-500";
+      }
+
+      el.className = `px-4 py-1 rounded-full text-sm font-bold ${colorClass}`;
+      if (bar) bar.className = `absolute top-0 left-0 w-2 h-full ${barColor}`;
+    }
+
+    // --- CALCULATORS ---
+
+    // 1. ICP
+    function calcICP() {
+      const planned = validateInput(document.getElementById('icp-planned'), v => v > 0, "Debe ser mayor a 0.");
+      const realized = validateInput(document.getElementById('icp-realized'), v => v >= 0, "No puede ser negativo.");
+
+      if (planned === null || realized === null) return;
+
+      if (realized > planned) {
+        // Warning logic purely for validation, though mathematically possible (extra work)
+        // We allow it but maybe warn? For now let's pass.
+      }
+
+      const icp = (realized / planned) * 100;
+      const finalVal = icp.toFixed(1) + '%';
+
+      document.getElementById('icp-value').innerText = finalVal;
+      document.getElementById('icp-result').classList.remove('hidden');
+      document.getElementById('dash-icp').innerText = finalVal;
+
+      let type = 'bad';
+      let msg = "Proceso indisciplinado.";
+      if (icp >= 85) { type = 'good'; msg = "¡Excelente disciplina!"; }
+      else if (icp >= 70) { type = 'warning'; msg = "Desviación aceptable."; }
+
+      updateBadge('icp-badge', type === 'good' ? 'OPTIMIZADO' : (type === 'warning' ? 'ACEPTABLE' : 'BAJO'), type, 'icp-bar');
+      document.getElementById('icp-feedback').innerText = msg;
+      updateChartData(0, icp);
+    }
+
+    // 2. NC
+    function calcNC() {
+      const total = validateInput(document.getElementById('nc-total'), v => v > 0, "Debe haber al menos 1 proceso.");
+      const found = validateInput(document.getElementById('nc-found'), v => v >= 0, "No puede ser negativo.");
+
+      if (total === null || found === null) return;
+
+      const nc = found / total;
+      document.getElementById('nc-value').innerText = nc.toFixed(2);
+      document.getElementById('nc-result').classList.remove('hidden');
+
+      let type = 'bad';
+      if (nc === 0) type = 'good';
+      else if (nc < 0.25) type = 'warning';
+
+      updateBadge('nc-badge', type === 'good' ? 'PERFECTO' : (type === 'warning' ? 'GESTIONABLE' : 'FALLIDO'), type, 'nc-bar');
+    }
+
+    // 3. MTBF
+    function calcMTBF() {
+      const time = validateInput(document.getElementById('mtbf-time'), v => v > 0, "El tiempo debe ser positivo.");
+      const fails = validateInput(document.getElementById('mtbf-fails'), v => v >= 0, "No negativo.");
+
+      if (time === null || fails === null) return;
+
+      let mtbf = 0;
+      let display = "";
+      let type = 'bad';
+
+      if (fails === 0) {
+        display = "∞";
+        type = 'good';
+        mtbf = 999; // For chart
+      } else {
+        mtbf = time / fails;
+        display = mtbf.toFixed(1) + "h";
+
+        if (mtbf > 72) type = 'good';
+        else if (mtbf > 24) type = 'warning';
+      }
+
+      document.getElementById('mtbf-value').innerText = display;
+      document.getElementById('mtbf-result').classList.remove('hidden');
+      document.getElementById('dash-mtbf').innerText = display;
+
+      updateBadge('mtbf-badge', type === 'good' ? 'ESTABLE' : (type === 'warning' ? 'ALERTA' : 'CRÍTICO'), type, 'mtbf-bar');
+      updateChartData(1, Math.min(mtbf, 100)); // Cap for radar
+    }
+
+    // 4. TPR
+    function calcTPR() {
+      const total = validateInput(document.getElementById('tpr-total-time'), v => v > 0, "Tiempo > 0");
+      const reqs = validateInput(document.getElementById('tpr-requests'), v => v > 0, "Solicitudes > 0");
+
+      if (total === null || reqs === null) return;
+
+      const tpr = total / reqs;
+      document.getElementById('tpr-value').innerText = tpr.toFixed(0) + "ms";
+      document.getElementById('tpr-result').classList.remove('hidden');
+      document.getElementById('dash-tpr').innerText = tpr.toFixed(0) + " ms";
+
+      let type = 'bad';
+      if (tpr < 200) type = 'good';
+      else if (tpr < 1000) type = 'warning';
+
+      updateBadge('tpr-badge', type === 'good' ? 'EXCELENTE' : (type === 'warning' ? 'NORMAL' : 'LENTO'), type, 'tpr-bar');
+
+      // Inverse for chart (Lower is better)
+      let chartVal = 100;
+      if (tpr > 1000) chartVal = 20;
+      else if (tpr > 200) chartVal = 60;
+      updateChartData(2, chartVal);
+    }
+
+    // 5. CC
+    function calcCC() {
+      const e = parseFloat(document.getElementById('cc-edges').value) || 0;
+      const n = parseFloat(document.getElementById('cc-nodes').value) || 0;
+      const p = parseFloat(document.getElementById('cc-comp').value) || 1;
+      const errorP = document.getElementById('cc-error');
+
+      if (n === 0 && e === 0) {
+        errorP.innerText = "Ingresa nodos o aristas.";
+        errorP.classList.remove('hidden');
+        return;
+      }
+      errorP.classList.add('hidden');
+
+      const cc = e - n + (2 * p);
+      document.getElementById('cc-value').innerText = cc;
+      document.getElementById('cc-result').classList.remove('hidden');
+      document.getElementById('dash-cc').innerText = cc;
+
+      let type = 'bad';
+      let txt = 'COMPLEJO';
+      if (cc <= 10) { type = 'good'; txt = 'SIMPLE'; }
+      else if (cc <= 20) { type = 'warning'; txt = 'MODERADO'; }
+
+      const badge = document.getElementById('cc-badge');
+      badge.innerText = txt;
+      badge.className = type === 'good' ? "inline-block mt-1 px-3 py-1 bg-green-100 text-green-700 rounded text-xs font-bold" :
+        (type === 'warning' ? "inline-block mt-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-bold" :
+          "inline-block mt-1 px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-bold");
+
+      // Chart (Inverse: lower is better)
+      let chartScore = Math.max(0, 100 - (cc * 2));
+      updateChartData(3, chartScore);
+    }
+
+    // 6. IVC
+    function calcIVC() {
+      const total = validateInput(document.getElementById('ivc-total'), v => v > 0, "Total > 0");
+      const crit = validateInput(document.getElementById('ivc-critical'), v => v >= 0, ">= 0");
+
+      if (total === null || crit === null) return;
+      if (crit > total) {
+        showError(document.getElementById('ivc-critical'), null, "Críticas no pueden ser mayor al total.");
+        alert("Error: Las críticas no pueden superar al total.");
+        return;
+      }
+
+      const ivc = (crit / total) * 100;
+      document.getElementById('ivc-value').innerText = ivc.toFixed(1) + "%";
+      document.getElementById('ivc-result').classList.remove('hidden');
+
+      let type = 'bad';
+      let txt = 'INSEGURO';
+      if (ivc === 0) { type = 'good'; txt = 'SEGURO'; }
+      else if (ivc < 15) { type = 'warning'; txt = 'VULNERABLE'; }
+
+      const badge = document.getElementById('ivc-badge');
+      badge.innerText = txt;
+      badge.className = type === 'good' ? "inline-block mt-1 px-3 py-1 bg-green-100 text-green-700 rounded text-xs font-bold" :
+        (type === 'warning' ? "inline-block mt-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-bold" :
+          "inline-block mt-1 px-3 py-1 bg-red-100 text-red-700 rounded text-xs font-bold");
+    }
+
+    // 7. UX
+    function calcUX() {
+      const total = validateInput(document.getElementById('ux-total'), v => v > 0, "> 0");
+      const success = validateInput(document.getElementById('ux-success'), v => v >= 0, ">= 0");
+
+      if (total === null || success === null) return;
+      if (success > total) {
+        alert("Erro: Éxitos > Totales");
+        return;
+      }
+
+      const rate = (success / total) * 100;
+      document.getElementById('ux-value').innerText = rate.toFixed(1) + "%";
+      document.getElementById('ux-result').classList.remove('hidden');
+
+      let type = 'bad';
+      let txt = 'BAJO';
+      if (rate > 90) { type = 'good'; txt = 'INTUITIVO'; }
+      else if (rate > 70) { type = 'warning'; txt = 'MEJORABLE'; }
+
+      const badge = document.getElementById('ux-badge');
+      badge.innerText = txt;
+      badge.className = type === 'good' ? "mt-2 inline-block px-4 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700" :
+        (type === 'warning' ? "mt-2 inline-block px-4 py-1 rounded-full text-sm font-bold bg-yellow-100 text-yellow-800" :
+          "mt-2 inline-block px-4 py-1 rounded-full text-sm font-bold bg-red-100 text-red-700");
+
+      updateChartData(4, rate);
+    }
+
+
+    // --- CHART ---
+    let qualityChart;
+    function initChart() {
+      const ctx = document.getElementById('qualityChart').getContext('2d');
+      qualityChart = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['Proceso (ICP)', 'Fiabilidad', 'Rendimiento', 'Mantenibilidad', 'Usabilidad'],
+          datasets: [{
+            label: 'Nivel de Calidad (0-100)',
+            data: [20, 20, 20, 20, 20], // Default small shape
+            backgroundColor: 'rgba(99, 102, 241, 0.2)', // Indigo
+            borderColor: 'rgba(99, 102, 241, 1)',
+            pointBackgroundColor: '#fff',
+            pointBorderColor: '#4f46e5',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              angleLines: { color: '#e2e8f0' },
+              grid: { color: '#e2e8f0' },
+              pointLabels: {
+                font: { size: 11, family: 'Inter' },
+                color: '#64748b'
+              },
+              suggestedMin: 0,
+              suggestedMax: 100
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    function updateChartData(index, value) {
+      if (qualityChart) {
+        qualityChart.data.datasets[0].data[index] = value;
+        qualityChart.update();
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initChart();
+      if (window.MathJax) MathJax.typeset();
+    });
+
+  </script>
+</body>
+
+</html>
